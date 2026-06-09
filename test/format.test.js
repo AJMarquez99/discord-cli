@@ -20,6 +20,10 @@ describe('table formatters', () => {
     expect(formatRead({ channelId: '1', count: 0, messages: [] })).toContain('no messages');
   });
 
+  it('formatRead handles a missing messages key without throwing', () => {
+    expect(formatRead({ channelId: '1', count: 0 })).toContain('no messages');
+  });
+
   it('formatReact confirms the reaction', () => {
     expect(formatReact({ channelId: '1', messageId: '2', emoji: '👍', reacted: true })).toContain('👍');
   });
@@ -28,6 +32,10 @@ describe('table formatters', () => {
     const out = formatThread({ parentChannelId: '1', threadId: '50', name: 'topic' });
     expect(out).toContain('50');
     expect(out).toContain('topic');
+  });
+
+  it('formatAllowList handles a missing channels key without throwing', () => {
+    expect(formatAllowList({ count: 0 })).toContain('empty');
   });
 
   it('formatAllowList renders entries, and a note when empty', () => {

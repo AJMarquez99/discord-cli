@@ -9,7 +9,7 @@ export function formatPost(r) {
 }
 
 export function formatRead(r) {
-  if (!r.messages.length) return `(no messages in channel ${r.channelId})`;
+  if (!r.messages || !r.messages.length) return `(no messages in channel ${r.channelId})`;
   return r.messages
     .map((m) => `${m.timestamp}  ${m.author || '(unknown)'}: ${m.content || '(no content)'}`)
     .join('\n');
@@ -20,11 +20,11 @@ export function formatReact(r) {
 }
 
 export function formatThread(r) {
-  return `thread created: ${r.name} (${r.threadId}) under channel ${r.parentChannelId}`;
+  return `thread created: ${r.name || '(unnamed)'} (${r.threadId}) under channel ${r.parentChannelId}`;
 }
 
 export function formatAllowList(r) {
-  if (r.count === 0) return '(allowlist empty — no channel can be posted to)';
+  if (!r.channels || !r.channels.length) return '(allowlist empty — no channel can be posted to)';
   return r.channels
     .map((c) => `${c.alias ? c.alias + '  ' : ''}${c.channelId}${c.serverId ? '  (server ' + c.serverId + ')' : ''}`)
     .join('\n');
@@ -35,8 +35,8 @@ export function formatDoctor(r) {
     `status:      ${r.ok ? 'ok' : 'FAILED'}`,
     `bot:         ${r.bot || '(unknown)'}${r.botId ? '  (' + r.botId + ')' : ''}`,
     `source:      ${r.source || '(none)'}`,
-    `credentials: ${r.credentials}`,
-    `api:         ${r.api}`,
+    `credentials: ${r.credentials || '(unknown)'}`,
+    `api:         ${r.api || '(unknown)'}`,
     `allowlist:   ${r.allowlist} channel(s)`,
   ];
   if (r.error) lines.push('', r.error);
