@@ -1771,9 +1771,9 @@ Expected: all suites pass (smoke, errors, credentials, allowlist, discord-client
 Run:
 ```bash
 node bin/discord.js --help
-DISCORD_ALLOWLIST=/dev/null DISCORD_BOT_TOKEN=fake node bin/discord.js post --channel random --message hi; echo "exit=$?"
+DISCORD_ALLOWLIST=/tmp/discord-cli-nonexistent.json DISCORD_BOT_TOKEN=fake node bin/discord.js post --channel random --message hi; echo "exit=$?"
 ```
-Expected: help lists all commands; the post attempt prints "Blocked by allowlist" to stderr and `exit=3` (allowlist loads empty from an empty/`/dev/null` file → fail-closed, so the block happens before any network call).
+Expected: help lists all commands; the post attempt prints "Blocked by allowlist" to stderr and `exit=3` (a **nonexistent** allowlist path → ENOENT → `loadAllowlist` returns `{ channels: [] }` → fail-closed, so the block happens before any network call). NOTE: do not point `DISCORD_ALLOWLIST` at an empty file or `/dev/null` — `loadAllowlist` calls `JSON.parse` on the contents, and an empty string throws a `SyntaxError` (exit 1), not a fail-closed block. Pointing at a path that does not exist is the correct way to demonstrate fail-closed. (Follow-up: harden `loadAllowlist` to treat an empty/malformed file as a clear CONFIG error — see plan notes.)
 
 - [ ] **Step 3: Confirm clean git status and review the diff against the spec's acceptance criteria**
 
