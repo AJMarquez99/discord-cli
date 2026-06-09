@@ -1,11 +1,18 @@
-import { MissingCredentialsError } from '../lib/errors.js';
+import { MissingCredentialsError, MalformedConfigError } from '../lib/errors.js';
 
 /**
  * Health check: is a token present, and does Discord accept it? Never throws — returns a
  * diagnostic envelope so callers always get a readable report.
  */
 export async function runDoctor(opts, deps) {
-  const allowlist = deps.loadAllowlist().channels.filter((c) => c && c.channelId).length;
+  let allowlist = 0;
+  try {
+    allowlist = deps.loadAllowlist().channels.filter((c) => c && c.channelId).length;
+  } catch {
+    // A malformed allowlist shouldn't crash the health check; report 0 and let other
+    // commands surface the specific config error.
+    allowlist = 0;
+  }
 
   let creds;
   try {
@@ -13,6 +20,9 @@ export async function runDoctor(opts, deps) {
   } catch (err) {
     if (err instanceof MissingCredentialsError) {
       return { ok: false, credentials: 'missing', api: 'skipped', error: err.message, allowlist };
+    }
+    if (err instanceof MalformedConfigError) {
+      return { ok: false, credentials: 'malformed', api: 'skipped', error: err.message, allowlist };
     }
     throw err;
   }

@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { loadAllowlist, resolveAllowlistPath, makeChannelResolver } from '../src/allowlist.js';
+import { MalformedConfigError } from '../src/lib/errors.js';
 
 const enoent = () => { const e = new Error('nope'); e.code = 'ENOENT'; throw e; };
 
@@ -23,6 +24,13 @@ describe('loadAllowlist', () => {
   it('also accepts a bare top-level array', () => {
     const al = loadAllowlist({ env: { HOME: '/h' }, readFile: () => JSON.stringify([{ alias: 'g', channelId: '1' }]) });
     expect(al.channels).toHaveLength(1);
+  });
+  it('throws MalformedConfigError for malformed JSON content', () => {
+    expect(() => loadAllowlist({ env: { HOME: '/h' }, readFile: () => '{ not json' }))
+      .toThrow(MalformedConfigError);
+  });
+  it('returns empty channels for empty/whitespace-only file', () => {
+    expect(loadAllowlist({ env: { HOME: '/h' }, readFile: () => '   ' })).toEqual({ channels: [] });
   });
 });
 

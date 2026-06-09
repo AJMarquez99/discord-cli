@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { resolveCredentials, resolveConfigPath } from '../src/auth/credentials.js';
-import { MissingCredentialsError } from '../src/lib/errors.js';
+import { MissingCredentialsError, MalformedConfigError } from '../src/lib/errors.js';
 
 const enoent = () => { const e = new Error('nope'); e.code = 'ENOENT'; throw e; };
 
@@ -35,6 +35,16 @@ describe('resolveCredentials', () => {
 
   it('throws MissingCredentialsError when the file lacks botToken', () => {
     expect(() => resolveCredentials({ env: { HOME: '/home/me' }, readFile: () => '{}' }))
+      .toThrow(MissingCredentialsError);
+  });
+
+  it('throws MalformedConfigError for malformed JSON content', () => {
+    expect(() => resolveCredentials({ env: { HOME: '/home/me' }, readFile: () => '{ not json' }))
+      .toThrow(MalformedConfigError);
+  });
+
+  it('throws MissingCredentialsError for empty file (treated as no token)', () => {
+    expect(() => resolveCredentials({ env: { HOME: '/home/me' }, readFile: () => '' }))
       .toThrow(MissingCredentialsError);
   });
 });

@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { MalformedConfigError } from './lib/errors.js';
 
 export function resolveAllowlistPath(env = process.env, _profile) {
   if (env.DISCORD_ALLOWLIST) return env.DISCORD_ALLOWLIST;
@@ -20,7 +21,13 @@ export function loadAllowlist({ env = process.env, readFile = readFileSync, prof
     if (err.code === 'ENOENT') return { channels: [] };
     throw err;
   }
-  const parsed = JSON.parse(raw);
+  if (!raw.trim()) return { channels: [] }; // empty file → fail-closed empty, same as missing
+  let parsed;
+  try {
+    parsed = JSON.parse(raw);
+  } catch (err) {
+    throw new MalformedConfigError(path, err.message);
+  }
   if (Array.isArray(parsed)) return { channels: parsed };
   return { channels: Array.isArray(parsed.channels) ? parsed.channels : [] };
 }

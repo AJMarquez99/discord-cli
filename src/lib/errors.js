@@ -31,6 +31,18 @@ export class InvalidInputError extends DiscordError {
   }
 }
 
+export class MalformedConfigError extends DiscordError {
+  constructor(path, detail) {
+    super(
+      `Config file is not valid JSON: ${path}` +
+        (detail ? `\n  ${detail}` : '') +
+        `\nFix the file (or delete it to start fresh) and retry.`,
+      EXIT_CODES.CONFIG,
+    );
+    this.path = path;
+  }
+}
+
 export class ChannelNotAllowedError extends DiscordError {
   constructor(denied, detail) {
     super(

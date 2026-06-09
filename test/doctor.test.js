@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { runDoctor } from '../src/commands/doctor.js';
-import { MissingCredentialsError } from '../src/lib/errors.js';
+import { MissingCredentialsError, MalformedConfigError } from '../src/lib/errors.js';
 
 const baseDeps = (over = {}) => ({
   loadAllowlist: () => ({ channels: [{ channelId: '1' }, { channelId: '2' }] }),
@@ -34,5 +34,22 @@ describe('runDoctor', () => {
     expect(r.ok).toBe(false);
     expect(r.credentials).toBe('ok');
     expect(r.api).toContain('401');
+  });
+
+  it('a malformed allowlist does not crash doctor (reports allowlist 0)', async () => {
+    const r = await runDoctor({}, baseDeps({
+      loadAllowlist: () => { throw new MalformedConfigError('/a.json', 'bad'); },
+    }));
+    expect(r).toBeDefined();
+    expect(r.allowlist).toBe(0);
+  });
+
+  it('a malformed credentials file returns ok:false with credentials:malformed', async () => {
+    const r = await runDoctor({}, baseDeps({
+      resolveCredentials: () => { throw new MalformedConfigError('/c.json', 'bad'); },
+    }));
+    expect(r.ok).toBe(false);
+    expect(r.credentials).toBe('malformed');
+    expect(r.api).toBe('skipped');
   });
 });

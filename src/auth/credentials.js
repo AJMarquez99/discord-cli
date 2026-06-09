@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { MissingCredentialsError } from '../lib/errors.js';
+import { MissingCredentialsError, MalformedConfigError } from '../lib/errors.js';
 
 // `profile` is accepted for forward-compat (aws-style profiles) but unused in v1.
 export function resolveConfigPath(env = process.env, _profile) {
@@ -27,8 +27,13 @@ export function resolveCredentials({ env = process.env, readFile = readFileSync,
     if (err.code === 'ENOENT') throw new MissingCredentialsError(path);
     throw err;
   }
-
-  const parsed = JSON.parse(raw);
+  if (!raw.trim()) throw new MissingCredentialsError(path); // empty file → treat as no token
+  let parsed;
+  try {
+    parsed = JSON.parse(raw);
+  } catch (err) {
+    throw new MalformedConfigError(path, err.message);
+  }
   if (!parsed.botToken) throw new MissingCredentialsError(path);
   return { botToken: parsed.botToken, source: path };
 }

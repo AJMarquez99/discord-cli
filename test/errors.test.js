@@ -6,6 +6,7 @@ import {
   InvalidInputError,
   ChannelNotAllowedError,
   DiscordApiError,
+  MalformedConfigError,
 } from '../src/lib/errors.js';
 
 describe('errors', () => {
@@ -39,5 +40,13 @@ describe('errors', () => {
     expect(e.message).toContain('403');
     expect(e.message).toContain('Missing Permissions');
     expect(e.message).toContain('50013');
+  });
+
+  it('MalformedConfigError is a CONFIG error and its message contains the path', () => {
+    const e = new MalformedConfigError('/tmp/cfg.json', 'Unexpected token x');
+    expect(e).toBeInstanceOf(DiscordError);
+    expect(e.exitCode).toBe(EXIT_CODES.CONFIG);
+    expect(e.message).toContain('/tmp/cfg.json');
+    expect(e.path).toBe('/tmp/cfg.json');
   });
 });
