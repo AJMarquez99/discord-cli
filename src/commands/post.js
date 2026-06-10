@@ -1,42 +1,62 @@
+import { gateChannel, gateThreadParent } from '../allowlist.js';
+import { resolveMode } from '../config.js';
+import { buildAllowedMentions } from '../lib/mentions.js';
+import { recordAction } from '../lib/audit.js';
 import { InvalidInputError, ChannelNotAllowedError } from '../lib/errors.js';
-import { makeChannelResolver } from '../allowlist.js';
 
-/**
- * Send a message. Target is a thread (--thread) if given, else a channel (--channel).
- * Allowlist-gated: a channel target must resolve via the allowlist; a thread target is
- * gated by its parent channel (fetched via getChannel(threadId)). Optional --reply-to
- * adds a message_reference to thread a reply.
- */
 export async function runPost(opts, deps) {
   const content = opts.message;
   if (!opts.channel && !opts.thread) {
-    throw new InvalidInputError('Provide --channel <alias|id> (or --thread <threadId>).');
+    throw new InvalidInputError('Provide --channel <id> (or --thread <threadId>).');
   }
   if (!content || !String(content).trim()) {
     throw new InvalidInputError('Empty message. Provide --message or pipe the body on stdin.');
   }
-
-  const { resolveWrite, isAllowedId } = makeChannelResolver({ allowlist: deps.loadAllowlist() });
+  const config = deps.loadConfig();
+  const mode = resolveMode({ config, env: process.env, unrestricted: opts.unrestricted });
+  const allowlist = deps.loadAllowlist();
   const creds = deps.resolveCredentials();
   const client = deps.createClient(creds);
+  const allowedMentions = buildAllowedMentions({
+    allowEveryone: opts.allowEveryone, allowRoles: opts.allowRoles, isReply: !!opts.replyTo,
+  });
 
-  let targetChannelId;
-  if (opts.thread) {
-    const thread = await client.getChannel(opts.thread);
-    const parentId = thread && thread.parent_id;
-    if (!parentId || !isAllowedId(parentId)) {
-      throw new ChannelNotAllowedError(opts.thread, `parent channel ${parentId || '(unknown)'} not allowlisted`);
+  // Resolve + gate the target. In dry-run, a block is reported (not thrown).
+  let target;
+  let allowlisted;
+  try {
+    if (opts.thread) {
+      const gated = await gateThreadParent({ threadId: opts.thread, mode, allowlist, client });
+      target = gated.channelId; allowlisted = gated.allowlisted;
+    } else {
+      const gated = await gateChannel({ channelId: opts.channel, mode, allowlist, client });
+      target = gated.channelId; allowlisted = gated.allowlisted;
     }
-    targetChannelId = opts.thread;
-  } else {
-    const r = resolveWrite(opts.channel);
-    if (r.denied) throw new ChannelNotAllowedError(r.denied);
-    targetChannelId = r.channelId;
+  } catch (err) {
+    if (opts.dryRun && err instanceof ChannelNotAllowedError) {
+      return {
+        dryRun: true, action: 'post', targetChannelId: null, blocked: true, reason: err.message,
+        mode, content: String(content), allowedMentions, replyTo: opts.replyTo || null,
+      };
+    }
+    throw err;
   }
 
-  const payload = { content: String(content) };
-  if (opts.replyTo) payload.message_reference = { message_id: opts.replyTo };
+  if (opts.dryRun) {
+    return {
+      dryRun: true, action: 'post', targetChannelId: target, blocked: false, reason: null,
+      mode, allowlisted, content: String(content), allowedMentions, replyTo: opts.replyTo || null,
+    };
+  }
 
-  const msg = await client.createMessage(targetChannelId, payload);
-  return { channelId: targetChannelId, messageId: msg.id, content: msg.content, replyTo: opts.replyTo || null };
+  const payload = { content: String(content), allowed_mentions: allowedMentions };
+  if (opts.replyTo) payload.message_reference = { message_id: opts.replyTo };
+  const msg = await client.createMessage(target, payload);
+
+  recordAction({
+    append: deps.appendAudit, now: deps.now, config, opts,
+    entry: { action: 'post', channelId: target, messageId: msg.id, mode, allowlisted, body: String(content) },
+  });
+
+  return { channelId: target, messageId: msg.id, content: msg.content, replyTo: opts.replyTo || null };
 }
