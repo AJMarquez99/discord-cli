@@ -139,6 +139,56 @@ Audit entry shape:
 | 2 | User-fixable config: missing token, malformed config/allowlist file, bad flags |
 | 3 | Blocked by allowlist or mode |
 
+## MCP layer (v0.3.0)
+
+A second front-end over the same command modules, exposed as a stdio Model Context Protocol
+server. The layer stack is:
+
+```
+bin/discord-mcp.js
+  └─ src/mcp/server.js    buildMcpServer / makeToolHandler / startMcpServer  (SDK binding)
+       └─ src/mcp/tools.js   TOOLS table (SDK-agnostic)
+            └─ src/commands/*   same run*(opts, deps) modules as the CLI
+```
+
+**`bin/discord-mcp.js`** — entry point: calls `startMcpServer()`, writes any startup error
+to stderr, and exits 1.
+
+**`src/mcp/server.js`** — SDK binding using `@modelcontextprotocol/sdk` v1:
+- `buildMcpServer(deps)` — constructs a `McpServer` named `discord-cli` v`0.3.0`, registers
+  every tool from `TOOLS` via `server.registerTool(name, schema, handler)`.
+- `makeToolHandler(tool, deps)` — returns an async handler that calls
+  `tool.command(tool.mapArgs(args), deps)` and wraps the result in
+  `{ content: [{ type: 'text', text: JSON.stringify(result) }] }`. On any thrown error
+  (including `DiscordError` subclasses), it returns
+  `{ content: [{ type: 'text', text: msg }], isError: true }` — the server never crashes
+  on a blocked or failed request.
+- `startMcpServer(deps)` — connects the server to a `StdioServerTransport`.
+
+**`src/mcp/tools.js`** — SDK-agnostic `TOOLS` array. Each entry is a plain object with:
+- `name` — tool name string (e.g. `discord_post`)
+- `description` — one-line description surfaced to the MCP client
+- `inputSchema` — zod raw shape (passed directly to `registerTool`)
+- `command` — the `run*` function to call (imported from `src/commands/*`)
+- `mapArgs` — pure function mapping snake_case MCP args to camelCase opts (e.g.
+  `reply_to → replyTo`, `auto_archive → autoArchive`, `no_audit → noAudit`)
+
+The `TOOLS` table is unit-tested: each `mapArgs` is exercised with known inputs; each
+`command` is checked for identity against the expected `run*` import. `makeToolHandler`'s
+error path (`DiscordError → isError: true`) is also covered in tests.
+
+**Safety inheritance:** tools pass opts to the same gated command functions used by the
+CLI, with `defaultDeps`. The allowlist, restricted/open mode, mention-safety, dry-run, and
+audit log all apply identically. A `ChannelNotAllowedError` from the command layer is caught
+by `makeToolHandler` and returned as `isError: true` — not re-thrown.
+
+**`read --thread` and `react --thread` (v0.3.0):** `runRead` and `runReact` now accept
+either `--channel <id>` or `--thread <threadId>`. When `--thread` is given, they call
+`gateThreadParent` (fetches the thread to get its `parent_id`, then applies the same
+channel/server rules to the parent). This is symmetric with the existing `post --thread`
+behavior and is reflected in both the CLI flags and the MCP tool schemas
+(`discord_read`/`discord_react` both accept an optional `thread` field).
+
 ## Profile-ready seam
 
 Both `resolveCredentials({ profile })` and `loadAllowlist({ profile })` accept a `profile` argument (forwarded from `--profile`). In v1 it is accepted but unused (`_profile`). This mirrors the `personal-agent` / `daedabyte-agent` pattern in the sibling CLIs and makes adding multi-bot profiles a non-breaking extension.

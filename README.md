@@ -4,7 +4,7 @@ A personal Discord CLI for agentic sessions — the `gh`/`gmail`/`gsc` sibling. 
 read channel history, react, reply, and create threads via the Discord REST API. All channel
 content access (reads, reactions, writes) is gated by a fail-closed allowlist.
 
-**Version:** 0.2.0
+**Version:** 0.3.0
 
 ## Install
 
@@ -123,30 +123,38 @@ discord post --channel 123456789012345678 --message "test" --dry-run
 
 ```
 discord read --channel <id> [--limit N] [--before <messageId>] [--after <messageId>]
+discord read --thread <threadId> [--limit N] [--before <messageId>] [--after <messageId>]
 ```
 
-Fetch recent messages from an allowlisted channel (blocked in restricted mode if channel is not allowlisted). Options:
+Fetch recent messages from an allowlisted channel or thread (blocked in restricted mode if channel is not allowlisted). Options:
 
 - `--channel <id>` — channel ID (must be allowlisted in restricted mode)
+- `--thread <threadId>` — read from a thread; gated by its parent channel (symmetric with `post --thread`)
 - `--limit <n>` — max messages to return (1–100, default 25)
 - `--before <messageId>` — only messages before this ID
 - `--after <messageId>` — only messages after this ID
 - `--unrestricted` — open mode: any visible channel in an allowlisted server
 
+Either `--channel` or `--thread` is required.
+
 ### `discord react`
 
 ```
 discord react --channel <id> --message <messageId> --emoji 👍
+discord react --thread <threadId> --message <messageId> --emoji 👍
 ```
 
 Add a reaction to a message (allowlist-gated). Options:
 
 - `--channel <id>` — channel ID (must be allowlisted in restricted mode)
+- `--thread <threadId>` — react to a message in a thread; gated by its parent channel (symmetric with `post --thread`)
 - `--message <messageId>` — target message ID
 - `--emoji <emoji>` — unicode emoji, or custom emoji as `name:id`
 - `--unrestricted` — open mode: any visible channel in an allowlisted server
 - `--dry-run` — preview without reacting or logging
 - `--no-audit` — skip writing this action to the audit log
+
+Either `--channel` or `--thread` is required.
 
 ### `discord thread create`
 
@@ -217,7 +225,42 @@ Verify the bot token; report active mode, bot identity (username, ID, credential
 | `2` | User-fixable config: missing token, malformed config file, bad flags |
 | `3` | Blocked by allowlist or mode (non-allowlisted channel in restricted mode, or channel not in an allowlisted server in open mode) |
 
-## Phase 2 — MCP wrapper (planned)
+## MCP server
 
-A thin MCP server will expose these same operations as structured tools, delegating to the
-command modules so the allowlist gate is shared. Not built yet.
+discord-cli ships a stdio Model Context Protocol server — the portable counterpart to the
+CLI, so MCP-aware clients (Claude Code, Claude Desktop) can drive Discord as structured
+tools without shell invocations.
+
+### Install
+
+`npm install -g .` installs **both** the `discord` CLI and the `discord-mcp` MCP server binary.
+
+### Register with Claude Code
+
+```bash
+claude mcp add discord -- discord-mcp
+```
+
+The server reads the same `~/.config/discord-cli/` credentials, config, and allowlist files
+as the CLI. No extra setup needed.
+
+### Tools
+
+| Tool | Description |
+|---|---|
+| `discord_post` | Post a message to an allowlisted channel (or thread). `@everyone`/`@here`/role pings are stripped unless `allow_everyone`/`allow_roles`. |
+| `discord_read` | Read recent messages from an allowlisted channel or thread. |
+| `discord_react` | Add a reaction to a message in an allowlisted channel or thread. |
+| `discord_create_thread` | Create a thread from a message in an allowlisted channel. |
+| `discord_channels` | List a server's channels (names → ids, type; marks allowlisted). Metadata only. |
+| `discord_audit` | Show recent audited actions (newest first). |
+| `discord_doctor` | Verify the bot token; report mode, identity, allowlist + server counts. |
+| `discord_allowlist` | Show the allowlisted channel ids and server ids. |
+
+### Safety
+
+Every tool delegates directly to the same `run*(opts, deps)` command functions used by the
+CLI. The allowlist gate, restricted/open mode, mention-safety, dry-run, and audit log all
+apply unchanged. A blocked channel returns an MCP error result (the tool call succeeds at
+the protocol level, but `isError: true` is set in the response) — the server never crashes
+on a blocked request.
