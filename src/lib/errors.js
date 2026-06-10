@@ -1,7 +1,7 @@
 // Exit codes mirror gmail-cli / gsc-cli: 2 = user-fixable config, 3 = allowlist block, 1 = everything else.
 export const EXIT_CODES = {
   GENERIC: 1, // unexpected / Discord API / network failure
-  CONFIG: 2, // user-fixable config (missing token, bad input, unknown alias)
+  CONFIG: 2, // user-fixable config (missing token, bad input, malformed config)
   FORBIDDEN: 3, // target channel blocked by the allowlist policy
 };
 
@@ -46,9 +46,9 @@ export class MalformedConfigError extends DiscordError {
 export class ChannelNotAllowedError extends DiscordError {
   constructor(denied, detail) {
     super(
-      `Blocked by allowlist — not permitted to post to: ${denied}` +
+      `Blocked by allowlist — not permitted to access channel: ${denied}` +
         (detail ? ` (${detail})` : '') +
-        `\nNothing was sent. Add the channel (alias + channelId) to the allowlist, then retry.\n` +
+        `\nNothing was done. Add the channel id to the allowlist (or allowlist its server and use open mode), then retry.\n` +
         `Allowlist: ~/.config/discord-cli/allowlist.json (DISCORD_ALLOWLIST overrides). See \`discord allow list\`.`,
       EXIT_CODES.FORBIDDEN,
     );
