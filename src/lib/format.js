@@ -51,6 +51,20 @@ export function formatChannels(r) {
     .join('\n');
 }
 
+export function formatAudit(r) {
+  if (!r.entries.length) return '(no audited actions yet)';
+  return r.entries
+    .map((e) => {
+      const parts = [e.ts, e.action, `ch ${e.channelId}`];
+      if (e.messageId) parts.push(`msg ${e.messageId}`);
+      if (e.threadId) parts.push(`thread ${e.threadId}`);
+      if (e.emoji) parts.push(e.emoji);
+      parts.push(`[${e.mode}]`);
+      return parts.join('  ');
+    })
+    .join('\n');
+}
+
 function doctorModeLine(r) {
   if (r.mode === 'open') {
     return r.servers > 0
