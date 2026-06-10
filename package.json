@@ -1,6 +1,6 @@
 {
   "name": "discord-cli",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
   "type": "module",
   "description": "Personal Discord CLI for agentic sessions (gh/gmail/gsc sibling). Post, read, react, and thread via the Discord REST API; fail-closed channel allowlist on sends.",
