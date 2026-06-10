@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import { resolveSettingsPath, loadConfig, resolveMode } from '../src/config.js';
 import { MalformedConfigError } from '../src/lib/errors.js';
 
@@ -45,5 +45,33 @@ describe('resolveMode', () => {
   it('falls back to config.mode', () => {
     expect(resolveMode({ config: { mode: 'open' }, env: {} })).toBe('open');
     expect(resolveMode({ config: { mode: 'restricted' }, env: {} })).toBe('restricted');
+  });
+
+  describe('DISCORD_MODE warning behavior', () => {
+    let stderrSpy;
+    afterEach(() => { stderrSpy && stderrSpy.mockRestore(); });
+
+    it('invalid DISCORD_MODE returns restricted AND writes a stderr warning', () => {
+      stderrSpy = vi.spyOn(process.stderr, 'write').mockImplementation(() => {});
+      const result = resolveMode({ config: { mode: 'restricted' }, env: { DISCORD_MODE: 'opne' } });
+      expect(result).toBe('restricted');
+      expect(stderrSpy).toHaveBeenCalledOnce();
+      expect(stderrSpy.mock.calls[0][0]).toContain('opne');
+      expect(stderrSpy.mock.calls[0][0]).toContain('restricted');
+    });
+
+    it('DISCORD_MODE=restricted returns restricted with NO warning', () => {
+      stderrSpy = vi.spyOn(process.stderr, 'write').mockImplementation(() => {});
+      const result = resolveMode({ config: { mode: 'open' }, env: { DISCORD_MODE: 'restricted' } });
+      expect(result).toBe('restricted');
+      expect(stderrSpy).not.toHaveBeenCalled();
+    });
+
+    it('DISCORD_MODE=open returns open with NO warning', () => {
+      stderrSpy = vi.spyOn(process.stderr, 'write').mockImplementation(() => {});
+      const result = resolveMode({ config: { mode: 'restricted' }, env: { DISCORD_MODE: 'open' } });
+      expect(result).toBe('open');
+      expect(stderrSpy).not.toHaveBeenCalled();
+    });
   });
 });
