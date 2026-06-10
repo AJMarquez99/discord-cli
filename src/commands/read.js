@@ -1,27 +1,20 @@
+import { gateChannel } from '../allowlist.js';
+import { resolveMode } from '../config.js';
 import { InvalidInputError } from '../lib/errors.js';
-import { makeChannelResolver } from '../allowlist.js';
 
 export async function runRead(opts, deps) {
-  if (!opts.channel) throw new InvalidInputError('Provide --channel <alias|id>.');
-
-  const { resolveRead } = makeChannelResolver({ allowlist: deps.loadAllowlist() });
-  const r = resolveRead(opts.channel);
-  if (r.denied) {
-    throw new InvalidInputError(
-      `Unknown channel alias: ${r.denied}. Use a known alias (see \`discord allow list\`) or a raw channel ID.`,
-    );
-  }
+  if (!opts.channel) throw new InvalidInputError('Provide --channel <id>.');
+  const mode = resolveMode({ config: deps.loadConfig(), env: process.env, unrestricted: opts.unrestricted });
+  const creds = deps.resolveCredentials();
+  const client = deps.createClient(creds);
+  const { channelId } = await gateChannel({ channelId: opts.channel, mode, allowlist: deps.loadAllowlist(), client });
 
   let limit = opts.limit != null ? parseInt(opts.limit, 10) : 25;
   if (Number.isNaN(limit) || limit < 1) limit = 25;
   if (limit > 100) limit = 100;
-
-  const creds = deps.resolveCredentials();
-  const client = deps.createClient(creds);
-  const messages = await client.getMessages(r.channelId, { limit, before: opts.before, after: opts.after });
-
+  const messages = await client.getMessages(channelId, { limit, before: opts.before, after: opts.after });
   return {
-    channelId: r.channelId,
+    channelId,
     count: messages.length,
     messages: messages.map((m) => ({
       id: m.id,

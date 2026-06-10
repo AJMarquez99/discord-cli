@@ -24,10 +24,21 @@ export function formatThread(r) {
 }
 
 export function formatAllowList(r) {
-  if (!r.channels || !r.channels.length) return '(allowlist empty — no channel can be posted to)';
-  return r.channels
-    .map((c) => `${c.alias ? c.alias + '  ' : ''}${c.channelId}${c.serverId ? '  (server ' + c.serverId + ')' : ''}`)
-    .join('\n');
+  if (!r.channelCount && !r.serverCount) return '(allowlist empty — no channels or servers configured)';
+  const lines = [`channels (${r.channelCount}):`];
+  for (const id of r.channels) lines.push(`  ${id}`);
+  lines.push(`servers (${r.serverCount}):`);
+  for (const id of r.servers) lines.push(`  ${id}`);
+  return lines.join('\n');
+}
+
+function doctorModeLine(r) {
+  if (r.mode === 'open') {
+    return r.servers > 0
+      ? `OPEN — writes to any visible channel in ${r.servers} allowed server(s)`
+      : `OPEN — no servers allowlisted, so only the ${r.allowlist} allowlisted channel(s) are writable`;
+  }
+  return 'restricted (allowlisted channels only)';
 }
 
 export function formatDoctor(r) {
@@ -37,7 +48,9 @@ export function formatDoctor(r) {
     `source:      ${r.source || '(none)'}`,
     `credentials: ${r.credentials || '(unknown)'}`,
     `api:         ${r.api || '(unknown)'}`,
+    `mode:        ${doctorModeLine(r)}`,
     `allowlist:   ${r.allowlist} channel(s)`,
+    `servers:     ${r.servers}`,
   ];
   if (r.error) lines.push('', r.error);
   return lines.join('\n');
