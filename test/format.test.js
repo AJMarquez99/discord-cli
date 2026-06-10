@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { formatPost, formatRead, formatReact, formatThread, formatAllowList, formatDoctor, formatChannels } from '../src/lib/format.js';
+import { formatPost, formatRead, formatReact, formatThread, formatAllowList, formatDoctor, formatChannels, formatAudit } from '../src/lib/format.js';
 
 describe('table formatters', () => {
   it('formatPost shows channel and message id', () => {
@@ -82,5 +82,38 @@ describe('table formatters', () => {
 
   it('formatChannels returns a "no channels" note when empty', () => {
     expect(formatChannels({ serverId: '77', count: 0, channels: [] })).toContain('no channels');
+  });
+
+  describe('formatAudit', () => {
+    it('returns a "no audited actions yet" note when entries is empty', () => {
+      expect(formatAudit({ entries: [] })).toBe('(no audited actions yet)');
+    });
+
+    it('renders one line per entry containing ts, action, channelId, and mode', () => {
+      const entries = [
+        { ts: '2024-01-01T00:00:00Z', action: 'post', channelId: '123', messageId: '9', mode: 'restricted' },
+        { ts: '2024-01-02T00:00:00Z', action: 'react', channelId: '456', messageId: '7', emoji: '👍', mode: 'open' },
+      ];
+      const out = formatAudit({ entries });
+      const lines = out.split('\n');
+      expect(lines).toHaveLength(2);
+      expect(lines[0]).toContain('2024-01-01T00:00:00Z');
+      expect(lines[0]).toContain('post');
+      expect(lines[0]).toContain('ch 123');
+      expect(lines[0]).toContain('[restricted]');
+      expect(lines[1]).toContain('2024-01-02T00:00:00Z');
+      expect(lines[1]).toContain('react');
+      expect(lines[1]).toContain('ch 456');
+      expect(lines[1]).toContain('👍');
+      expect(lines[1]).toContain('[open]');
+    });
+
+    it('includes messageId and threadId when present', () => {
+      const entries = [
+        { ts: 't', action: 'thread', channelId: '1', threadId: '55', mode: 'restricted' },
+      ];
+      const out = formatAudit({ entries });
+      expect(out).toContain('thread 55');
+    });
   });
 });
