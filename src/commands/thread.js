@@ -34,7 +34,7 @@ export async function runThreadCreate(opts, deps) {
   const thread = await client.startThreadFromMessage(channelId, opts.from, payload);
   recordAction({
     append: deps.appendAudit, now: deps.now, config, opts,
-    entry: { action: 'thread', channelId, threadId: thread.id, mode, allowlisted },
+    entry: { action: 'thread', channelId, messageId: opts.from, threadId: thread.id, name: opts.name, mode, allowlisted },
   });
   return { parentChannelId: channelId, threadId: thread.id, name: thread.name };
 }
