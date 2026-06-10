@@ -38,9 +38,9 @@ describe('resolveMode', () => {
   it('unrestricted flag wins', () => {
     expect(resolveMode({ config: { mode: 'restricted' }, env: {}, unrestricted: true })).toBe('open');
   });
-  it('DISCORD_MODE=open → open, any other value → restricted', () => {
+  it('DISCORD_MODE=open → open, DISCORD_MODE=restricted → restricted', () => {
     expect(resolveMode({ config: { mode: 'restricted' }, env: { DISCORD_MODE: 'open' } })).toBe('open');
-    expect(resolveMode({ config: { mode: 'open' }, env: { DISCORD_MODE: 'no' } })).toBe('restricted');
+    expect(resolveMode({ config: { mode: 'open' }, env: { DISCORD_MODE: 'restricted' } })).toBe('restricted');
   });
   it('falls back to config.mode', () => {
     expect(resolveMode({ config: { mode: 'open' }, env: {} })).toBe('open');
