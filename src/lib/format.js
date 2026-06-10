@@ -3,9 +3,13 @@ export function printJson(value) {
 }
 
 export function formatPost(r) {
-  return [`posted → channel ${r.channelId}`, `message-id: ${r.messageId}`, r.replyTo ? `reply-to: ${r.replyTo}` : null]
-    .filter(Boolean)
-    .join('\n');
+  if (r.dryRun) {
+    if (r.blocked) return `DRY RUN — would be BLOCKED: ${r.reason}`;
+    return [`DRY RUN — would post → channel ${r.targetChannelId}`, `content: ${r.content}`,
+      r.replyTo ? `reply-to: ${r.replyTo}` : null].filter(Boolean).join('\n');
+  }
+  return [`posted → channel ${r.channelId}`, `message-id: ${r.messageId}`,
+    r.replyTo ? `reply-to: ${r.replyTo}` : null].filter(Boolean).join('\n');
 }
 
 export function formatRead(r) {

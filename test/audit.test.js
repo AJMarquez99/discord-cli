@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { resolveAuditPath, appendAudit, readAudit } from '../src/lib/audit.js';
+import { resolveAuditPath, appendAudit, readAudit, recordAction } from '../src/lib/audit.js';
 
 const enoent = () => { const e = new Error('nope'); e.code = 'ENOENT'; throw e; };
 
@@ -34,5 +34,64 @@ describe('readAudit', () => {
     const r = readAudit({ env: { HOME: '/h' }, readFile: () => raw });
     expect(r.entries).toHaveLength(20);
     expect(r.entries[0]).toEqual({ n: 29 });
+  });
+});
+
+describe('recordAction', () => {
+  const baseConfig = { auditLog: { enabled: true, logBody: false } };
+  const now = () => '2026-06-09T00:00:00.000Z';
+
+  it('writes entry with ts when enabled', () => {
+    const append = vi.fn();
+    recordAction({ append, now, config: baseConfig, opts: {}, entry: { action: 'post', channelId: '1' } });
+    expect(append).toHaveBeenCalledOnce();
+    expect(append.mock.calls[0][0]).toMatchObject({ ts: '2026-06-09T00:00:00.000Z', action: 'post', channelId: '1' });
+  });
+
+  it('skips when opts.audit === false', () => {
+    const append = vi.fn();
+    recordAction({ append, now, config: baseConfig, opts: { audit: false }, entry: { action: 'post' } });
+    expect(append).not.toHaveBeenCalled();
+  });
+
+  it('skips when opts.noAudit is true', () => {
+    const append = vi.fn();
+    recordAction({ append, now, config: baseConfig, opts: { noAudit: true }, entry: { action: 'post' } });
+    expect(append).not.toHaveBeenCalled();
+  });
+
+  it('skips when config.auditLog.enabled === false', () => {
+    const append = vi.fn();
+    recordAction({ append, now, config: { auditLog: { enabled: false } }, opts: {}, entry: { action: 'post' } });
+    expect(append).not.toHaveBeenCalled();
+  });
+
+  it('drops body when config.auditLog.logBody is false and opts.logBody is not set', () => {
+    const append = vi.fn();
+    recordAction({ append, now, config: baseConfig, opts: {}, entry: { action: 'post', body: 'hello' } });
+    expect(append.mock.calls[0][0]).not.toHaveProperty('body');
+  });
+
+  it('includes body when config.auditLog.logBody is true', () => {
+    const append = vi.fn();
+    const config = { auditLog: { enabled: true, logBody: true } };
+    recordAction({ append, now, config, opts: {}, entry: { action: 'post', body: 'hello' } });
+    expect(append.mock.calls[0][0]).toHaveProperty('body', 'hello');
+  });
+
+  it('includes body when opts.logBody is true', () => {
+    const append = vi.fn();
+    recordAction({ append, now, config: baseConfig, opts: { logBody: true }, entry: { action: 'post', body: 'hello' } });
+    expect(append.mock.calls[0][0]).toHaveProperty('body', 'hello');
+  });
+
+  it('does not propagate a throwing append (warns to stderr instead)', () => {
+    const append = () => { throw new Error('disk full'); };
+    const stderrSpy = vi.spyOn(process.stderr, 'write').mockImplementation(() => {});
+    expect(() =>
+      recordAction({ append, now, config: baseConfig, opts: {}, entry: { action: 'post' } })
+    ).not.toThrow();
+    expect(stderrSpy).toHaveBeenCalledWith(expect.stringContaining('audit write failed'));
+    stderrSpy.mockRestore();
   });
 });
