@@ -12,7 +12,7 @@ export function createDiscordClient(creds, { fetchImpl = fetch, sleep = (ms) => 
   const headers = {
     Authorization: `Bot ${creds.botToken}`,
     'Content-Type': 'application/json',
-    'User-Agent': 'discord-cli (https://github.com/AJMarquez99/discord-cli, 0.1.0)',
+    'User-Agent': 'discord-cli (https://github.com/AJMarquez99/discord-cli, 0.2.0)',
   };
 
   async function request(method, path, { body, query } = {}) {
@@ -45,6 +45,7 @@ export function createDiscordClient(creds, { fetchImpl = fetch, sleep = (ms) => 
   return {
     getMe: () => request('GET', '/users/@me'),
     getChannel: (channelId) => request('GET', `/channels/${channelId}`),
+    getGuildChannels: (guildId) => request('GET', `/guilds/${guildId}/channels`),
     getMessages: (channelId, { limit, before, after } = {}) =>
       request('GET', `/channels/${channelId}/messages`, { query: { limit, before, after } }),
     createMessage: (channelId, payload) =>
