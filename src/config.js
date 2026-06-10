@@ -34,6 +34,12 @@ export function loadConfig({ env = process.env, readFile = readFileSync } = {}) 
 
 export function resolveMode({ config = DEFAULTS, env = process.env, unrestricted = false } = {}) {
   if (unrestricted) return 'open';
-  if (env.DISCORD_MODE) return env.DISCORD_MODE === 'open' ? 'open' : 'restricted';
+  if (env.DISCORD_MODE) {
+    if (env.DISCORD_MODE === 'open') return 'open';
+    if (env.DISCORD_MODE !== 'restricted') {
+      process.stderr.write(`warn: DISCORD_MODE='${env.DISCORD_MODE}' is not 'open' or 'restricted'; using restricted.\n`);
+    }
+    return 'restricted';
+  }
   return config.mode === 'open' ? 'open' : 'restricted';
 }

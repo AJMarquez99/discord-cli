@@ -15,8 +15,12 @@ const deps = (over = {}) => ({
 });
 
 describe('runReact', () => {
-  it('requires channel, message, and emoji', async () => {
+  it('requires channel (or thread), message, and emoji; missing any → InvalidInputError', async () => {
     await expect(runReact({ channel: '111111111111111111', message: '1' }, deps())).rejects.toBeInstanceOf(InvalidInputError);
+  });
+
+  it('neither --channel nor --thread → InvalidInputError', async () => {
+    await expect(runReact({ message: '42', emoji: '👍' }, deps())).rejects.toBeInstanceOf(InvalidInputError);
   });
 
   it('reacts on an allowlisted channel', async () => {
@@ -95,6 +99,21 @@ describe('runReact', () => {
 
   it('a real react to a non-allowlisted channel still throws ChannelNotAllowedError', async () => {
     await expect(runReact({ channel: '222222222222222222', message: '42', emoji: '🎉' }, deps()))
+      .rejects.toBeInstanceOf(ChannelNotAllowedError);
+  });
+
+  it('--thread reacts on the thread id when parent is allowlisted', async () => {
+    const addReaction = vi.fn().mockResolvedValue(null);
+    const getChannel = vi.fn().mockResolvedValue({ id: 'thread1', parent_id: '111111111111111111' });
+    const r = await runReact({ thread: 'thread1', message: '42', emoji: '👍' }, deps({ addReaction, getChannel }));
+    expect(getChannel).toHaveBeenCalledWith('thread1');
+    expect(addReaction).toHaveBeenCalledWith('thread1', '42', '👍');
+    expect(r).toMatchObject({ channelId: 'thread1', messageId: '42', emoji: '👍', reacted: true });
+  });
+
+  it('--thread whose parent is NOT allowlisted → ChannelNotAllowedError', async () => {
+    const getChannel = vi.fn().mockResolvedValue({ id: 'thread2', parent_id: '999999999999999999' });
+    await expect(runReact({ thread: 'thread2', message: '42', emoji: '👍' }, deps({ getChannel })))
       .rejects.toBeInstanceOf(ChannelNotAllowedError);
   });
 });
