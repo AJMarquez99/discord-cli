@@ -12,7 +12,7 @@ export function createDiscordClient(creds, { fetchImpl = fetch, sleep = (ms) => 
   const headers = {
     Authorization: `Bot ${creds.botToken}`,
     'Content-Type': 'application/json',
-    'User-Agent': 'discord-cli (https://github.com/AJMarquez99/discord-cli, 0.1.0)',
+    'User-Agent': 'discord-cli (https://github.com/AJMarquez99/discord-cli, 0.2.0)',
   };
 
   async function request(method, path, { body, query } = {}) {
