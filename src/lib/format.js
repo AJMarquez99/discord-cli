@@ -20,10 +20,18 @@ export function formatRead(r) {
 }
 
 export function formatReact(r) {
+  if (r.dryRun) {
+    if (r.blocked) return `DRY RUN — would be BLOCKED: ${r.reason}`;
+    return `DRY RUN — would react ${r.emoji} → message ${r.messageId} in channel ${r.targetChannelId}`;
+  }
   return `reacted ${r.emoji} → message ${r.messageId} in channel ${r.channelId}`;
 }
 
 export function formatThread(r) {
+  if (r.dryRun) {
+    if (r.blocked) return `DRY RUN — would be BLOCKED: ${r.reason}`;
+    return `DRY RUN — would create thread "${r.name}" from message ${r.from} under channel ${r.parentChannelId}`;
+  }
   return `thread created: ${r.name || '(unnamed)'} (${r.threadId}) under channel ${r.parentChannelId}`;
 }
 
