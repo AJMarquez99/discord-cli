@@ -66,6 +66,17 @@ describe('createDiscordClient', () => {
     expect(sleep).toHaveBeenCalledWith(1000);
   });
 
+  it('getGuildChannels GETs the guild channels endpoint', async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(fakeRes({ json: [{ id: '1', name: 'general', type: 0 }] }));
+    const client = createDiscordClient(creds, { fetchImpl });
+    const channels = await client.getGuildChannels('77');
+    expect(channels).toEqual([{ id: '1', name: 'general', type: 0 }]);
+    const [url, init] = fetchImpl.mock.calls[0];
+    expect(url).toBe('https://discord.com/api/v10/guilds/77/channels');
+    expect(init.method).toBe('GET');
+    expect(init.headers.Authorization).toBe('Bot tok');
+  });
+
   it('throws DiscordApiError on a non-OK response', async () => {
     const fetchImpl = vi.fn().mockResolvedValue(fakeRes({ status: 403, json: { message: 'Missing Permissions', code: 50013 } }));
     const client = createDiscordClient(creds, { fetchImpl });
