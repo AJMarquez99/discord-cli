@@ -5,7 +5,8 @@
   "type": "module",
   "description": "Personal Discord CLI for agentic sessions (gh/gmail/gsc sibling). Post, read, react, and thread via the Discord REST API; fail-closed channel allowlist on sends.",
   "bin": {
-    "discord": "./bin/discord.js"
+    "discord": "./bin/discord.js",
+    "discord-mcp": "./bin/discord-mcp.js"
   },
   "engines": {
     "node": ">=20"
@@ -15,7 +16,9 @@
     "test:run": "vitest run"
   },
   "dependencies": {
-    "commander": "^12.1.0"
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "commander": "^12.1.0",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "vitest": "^4.1.8"
