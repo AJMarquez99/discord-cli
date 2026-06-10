@@ -44,6 +44,13 @@ export function formatAllowList(r) {
   return lines.join('\n');
 }
 
+export function formatChannels(r) {
+  if (!r.channels.length) return `(no channels visible in server ${r.serverId})`;
+  return r.channels
+    .map((c) => `${c.allowlisted ? '*' : ' '} ${c.name}  ${c.id}  (${c.type})`)
+    .join('\n');
+}
+
 function doctorModeLine(r) {
   if (r.mode === 'open') {
     return r.servers > 0

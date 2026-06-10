@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { formatPost, formatRead, formatReact, formatThread, formatAllowList, formatDoctor } from '../src/lib/format.js';
+import { formatPost, formatRead, formatReact, formatThread, formatAllowList, formatDoctor, formatChannels } from '../src/lib/format.js';
 
 describe('table formatters', () => {
   it('formatPost shows channel and message id', () => {
@@ -59,5 +59,28 @@ describe('table formatters', () => {
     const out = formatDoctor({ ok: true, bot: 'mybot', botId: '7', source: 'env', credentials: 'ok', api: 'ok', mode: 'open', allowlist: 0, servers: 2 });
     expect(out).toContain('OPEN');
     expect(out).toContain('2 allowed server');
+  });
+
+  it('formatChannels marks allowlisted channels with * and shows name/id/type', () => {
+    const out = formatChannels({
+      serverId: '77',
+      count: 2,
+      channels: [
+        { id: '10', name: 'general', type: 'text', parentId: '99', allowlisted: true },
+        { id: '12', name: 'announce', type: 'announcement', parentId: null, allowlisted: false },
+      ],
+    });
+    const lines = out.split('\n');
+    expect(lines[0]).toMatch(/^\*/);
+    expect(lines[0]).toContain('general');
+    expect(lines[0]).toContain('10');
+    expect(lines[0]).toContain('text');
+    expect(lines[1]).toMatch(/^ /);
+    expect(lines[1]).toContain('announce');
+    expect(lines[1]).toContain('announcement');
+  });
+
+  it('formatChannels returns a "no channels" note when empty', () => {
+    expect(formatChannels({ serverId: '77', count: 0, channels: [] })).toContain('no channels');
   });
 });
