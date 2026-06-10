@@ -34,21 +34,30 @@ describe('table formatters', () => {
     expect(out).toContain('topic');
   });
 
-  it('formatAllowList handles a missing channels key without throwing', () => {
-    expect(formatAllowList({ count: 0 })).toContain('empty');
+  it('formatAllowList shows a note when empty', () => {
+    expect(formatAllowList({ channelCount: 0, channels: [], serverCount: 0, servers: [] })).toContain('empty');
   });
 
-  it('formatAllowList renders entries, and a note when empty', () => {
-    expect(formatAllowList({ count: 0, channels: [] })).toContain('empty');
-    const out = formatAllowList({ count: 1, channels: [{ alias: 'general', channelId: '111', serverId: null }] });
-    expect(out).toContain('general');
+  it('formatAllowList renders channel and server ids', () => {
+    const out = formatAllowList({ channelCount: 1, channels: ['111'], serverCount: 1, servers: ['999'] });
     expect(out).toContain('111');
+    expect(out).toContain('999');
+    expect(out).toContain('channels (1)');
+    expect(out).toContain('servers (1)');
   });
 
-  it('formatDoctor reports status and bot identity', () => {
-    const out = formatDoctor({ ok: true, bot: 'mybot', botId: '7', source: 'env', credentials: 'ok', api: 'ok', allowlist: 3 });
+  it('formatDoctor reports status, bot identity, mode and server count', () => {
+    const out = formatDoctor({ ok: true, bot: 'mybot', botId: '7', source: 'env', credentials: 'ok', api: 'ok', mode: 'restricted', allowlist: 3, servers: 1 });
     expect(out).toContain('ok');
     expect(out).toContain('mybot');
     expect(out).toContain('3');
+    expect(out).toContain('mode:');
+    expect(out).toContain('restricted');
+  });
+
+  it('formatDoctor describes open mode', () => {
+    const out = formatDoctor({ ok: true, bot: 'mybot', botId: '7', source: 'env', credentials: 'ok', api: 'ok', mode: 'open', allowlist: 0, servers: 2 });
+    expect(out).toContain('OPEN');
+    expect(out).toContain('2 allowed server');
   });
 });

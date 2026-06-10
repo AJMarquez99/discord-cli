@@ -3,7 +3,8 @@ import { run } from '../src/cli.js';
 
 function fakeDeps(over = {}) {
   return {
-    loadAllowlist: () => ({ channels: [{ alias: 'general', channelId: '111111111111111111' }] }),
+    loadAllowlist: () => ({ channels: ['111111111111111111'], servers: [] }),
+    loadConfig: () => ({ mode: 'restricted', auditLog: { enabled: true, logBody: false } }),
     resolveCredentials: () => ({ botToken: 'tok', source: 'env' }),
     createClient: () => ({
       getMe: async () => ({ id: '7', username: 'mybot' }),
@@ -36,8 +37,8 @@ describe('cli run()', () => {
     expect(process.exitCode).toBe(0);
   });
 
-  it('post to an allowlisted alias succeeds', async () => {
-    await run(argv('post', '--channel', 'general', '--message', 'hi'), fakeDeps());
+  it('post to an allowlisted channel succeeds', async () => {
+    await run(argv('post', '--channel', '111111111111111111', '--message', 'hi'), fakeDeps());
     const printed = out.mock.calls.map((c) => c[0]).join('');
     expect(printed).toContain('"messageId": "99"');
     expect(process.exitCode).toBe(0);
@@ -61,7 +62,7 @@ describe('cli run()', () => {
     const getMessages = vi.fn().mockResolvedValue([
       { id: 'a', author: { username: 'alice' }, content: 'hello', timestamp: 't1' },
     ]);
-    await run(argv('read', '--channel', 'general', '--limit', '5'), fakeDeps({ createClient: () => ({ getMessages }) }));
+    await run(argv('read', '--channel', '111111111111111111', '--limit', '5'), fakeDeps({ createClient: () => ({ getMessages }) }));
     expect(getMessages).toHaveBeenCalledWith('111111111111111111', { limit: 5, before: undefined, after: undefined });
   });
 });
