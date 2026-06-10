@@ -45,6 +45,7 @@ export function createDiscordClient(creds, { fetchImpl = fetch, sleep = (ms) => 
   return {
     getMe: () => request('GET', '/users/@me'),
     getChannel: (channelId) => request('GET', `/channels/${channelId}`),
+    getGuildChannels: (guildId) => request('GET', `/guilds/${guildId}/channels`),
     getMessages: (channelId, { limit, before, after } = {}) =>
       request('GET', `/channels/${channelId}/messages`, { query: { limit, before, after } }),
     createMessage: (channelId, payload) =>
