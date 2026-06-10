@@ -15,7 +15,7 @@ const deps = (over = {}) => ({
 });
 
 describe('runRead', () => {
-  it('requires --channel', async () => {
+  it('requires --channel or --thread (neither → InvalidInputError)', async () => {
     await expect(runRead({}, deps())).rejects.toBeInstanceOf(InvalidInputError);
   });
 
@@ -58,5 +58,21 @@ describe('runRead', () => {
       allowlist: { channels: [], servers: [] },
       getChannel: async () => ({ guild_id: '77' }),
     }))).rejects.toBeInstanceOf(ChannelNotAllowedError);
+  });
+
+  it('--thread reads messages on the thread id when parent is allowlisted', async () => {
+    const getMessages = vi.fn().mockResolvedValue(apiMessages);
+    const getChannel = vi.fn().mockResolvedValue({ id: 'thread1', parent_id: '111111111111111111' });
+    const r = await runRead({ thread: 'thread1' }, deps({ getMessages, getChannel }));
+    expect(getChannel).toHaveBeenCalledWith('thread1');
+    expect(getMessages).toHaveBeenCalledWith('thread1', { limit: 25, before: undefined, after: undefined });
+    expect(r.channelId).toBe('thread1');
+    expect(r.count).toBe(1);
+  });
+
+  it('--thread whose parent is NOT allowlisted → ChannelNotAllowedError', async () => {
+    const getChannel = vi.fn().mockResolvedValue({ id: 'thread2', parent_id: '999999999999999999' });
+    await expect(runRead({ thread: 'thread2' }, deps({ getChannel })))
+      .rejects.toBeInstanceOf(ChannelNotAllowedError);
   });
 });

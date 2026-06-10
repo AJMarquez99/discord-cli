@@ -56,7 +56,7 @@ export function buildProgram(deps = defaultDeps) {
   program
     .name('discord')
     .description('Personal Discord CLI for agentic sessions (gh/gmail/gsc sibling)')
-    .version('0.2.0')
+    .version('0.3.0')
     .option('--format <format>', 'output format: json|table', 'json')
     .option('--profile <name>', 'config profile (reserved; single identity in v1)');
 
@@ -79,6 +79,7 @@ export function buildProgram(deps = defaultDeps) {
     .command('read')
     .description('Read recent messages from an allowlisted channel')
     .option('--channel <id>', 'channel id')
+    .option('--thread <threadId>', 'target a thread (gated by its parent channel)')
     .option('--limit <n>', 'max messages (1-100, default 25)')
     .option('--before <messageId>', 'only messages before this id')
     .option('--after <messageId>', 'only messages after this id')
@@ -89,6 +90,7 @@ export function buildProgram(deps = defaultDeps) {
     .command('react')
     .description('Add a reaction to a message (allowlist-gated)')
     .option('--channel <id>', 'channel id')
+    .option('--thread <threadId>', 'target a thread (gated by its parent channel)')
     .option('--message <messageId>', 'target message id')
     .option('--emoji <emoji>', 'unicode emoji or custom name:id')
     .option('--unrestricted', 'open mode: any visible channel in an allowlisted server')
