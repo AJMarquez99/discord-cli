@@ -47,7 +47,9 @@ describe('runThreadCreate', () => {
       ts: '2026-06-09T00:00:00.000Z',
       action: 'thread',
       channelId: '111111111111111111',
+      messageId: '42',
       threadId: '50',
+      name: 'topic',
       mode: 'restricted',
       allowlisted: true,
     });
