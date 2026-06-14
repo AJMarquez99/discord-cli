@@ -2,6 +2,22 @@ export function printJson(value) {
   process.stdout.write(JSON.stringify(value, null, 2) + '\n');
 }
 
+export function formatInit(result) {
+  const lines = [];
+  for (const p of result.created) lines.push(`created: ${p}`);
+  for (const p of result.skipped) lines.push(`exists:  ${p}`);
+  lines.push(`credentials: ${result.credentials}`);
+  if (result.nextSteps && result.nextSteps.length) {
+    lines.push('', 'Next steps:');
+    for (const [i, s] of result.nextSteps.entries()) lines.push(`  ${i + 1}. ${s}`);
+  }
+  return lines.join('\n');
+}
+
+export function formatLogin(r) {
+  return `bot token written to ${r.path} — verify with: discord doctor`;
+}
+
 export function formatPost(r) {
   if (r.dryRun) {
     if (r.blocked) return `DRY RUN — would be BLOCKED: ${r.reason}`;
