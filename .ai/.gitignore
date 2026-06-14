@@ -1,0 +1,7 @@
+# Local-only files: anything starting with `_` stays on your machine, never committed.
+# Use it for personal notes, secrets, or work-in-progress.
+_*
+
+# Internal design plans are kept locally (for the maintainer's reference), not shipped
+# in the public repository.
+plans/
