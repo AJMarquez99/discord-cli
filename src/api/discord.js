@@ -1,4 +1,5 @@
 import { DiscordApiError } from '../lib/errors.js';
+import { VERSION } from '../version.js';
 
 const API_BASE = 'https://discord.com/api/v10';
 const MAX_RETRIES = 2;
@@ -12,7 +13,7 @@ export function createDiscordClient(creds, { fetchImpl = fetch, sleep = (ms) => 
   const headers = {
     Authorization: `Bot ${creds.botToken}`,
     'Content-Type': 'application/json',
-    'User-Agent': 'discord-cli (https://github.com/AJMarquez99/discord-cli, 0.3.0)',
+    'User-Agent': `discord-cli (https://github.com/AJMarquez99/discord-cli, ${VERSION})`,
   };
 
   async function request(method, path, { body, query } = {}) {

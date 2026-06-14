@@ -21,13 +21,22 @@ cd ~/Code/Projects/discord-cli && npm install && npm install -g .
 
 ## Credentials
 
-Set `DISCORD_BOT_TOKEN`, or create `~/.config/discord-cli/credentials.json`:
+The quickest path is `discord login`, which prompts for the bot token (hidden input) and writes
+`~/.config/discord-cli/credentials.json` at `chmod 600`:
+
+```sh
+discord login            # paste the token at the hidden prompt
+discord login --force    # overwrite an existing credentials file
+```
+
+Or do it by hand — set `DISCORD_BOT_TOKEN`, or create `~/.config/discord-cli/credentials.json`:
 
 ```json
 { "botToken": "your-bot-token" }
 ```
 
 Override the config path with `DISCORD_CLI_CONFIG`. Token precedence: env var first, then file.
+Run `discord init` first to scaffold the config files and print the full setup steps.
 
 ## Allowlist
 
@@ -216,6 +225,22 @@ discord doctor
 
 Verify the bot token; report active mode, bot identity (username, ID, credential source), allowlist channel count, and server count.
 
+### `discord init`
+
+```
+discord init
+```
+
+Scaffold `~/.config/discord-cli/` with starter `allowlist.json` (empty — fail-closed) and `config.json`, report whether credentials are present, and print the remaining setup steps. Non-clobbering: existing files are reported as `exists` and left untouched. Never writes secrets — use `discord login` for the token.
+
+### `discord login`
+
+```
+discord login [--force]
+```
+
+Set up the bot token: prompts for it with **hidden input** and writes `credentials.json` at `chmod 600`. The token flows prompt → file only — it is never echoed, returned, logged, or accepted as a flag. Refuses to overwrite an existing credentials file unless `--force` is passed.
+
 ## Exit codes
 
 | Code | Meaning |
@@ -264,3 +289,13 @@ CLI. The allowlist gate, restricted/open mode, mention-safety, dry-run, and audi
 apply unchanged. A blocked channel returns an MCP error result (the tool call succeeds at
 the protocol level, but `isError: true` is set in the response) — the server never crashes
 on a blocked request.
+
+## Related tools
+
+discord-cli is one of a small family of personal, fail-closed CLIs built for AI coding agents —
+each a focused wrapper around a single service, in the spirit of [`gh`](https://cli.github.com):
+
+- **[gmail-cli](https://github.com/AJMarquez99/gmail-cli)** — send + IMAP read over Gmail, with a
+  fail-closed recipient allowlist and an optional MCP server.
+- **[dot-ai](https://github.com/AJMarquez99/dot-ai)** — the agent-agnostic `.ai/` project-intelligence
+  convention these tools are documented with.
