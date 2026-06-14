@@ -1,4 +1,4 @@
-// Exit codes mirror gmail-cli / gsc-cli: 2 = user-fixable config, 3 = allowlist block, 1 = everything else.
+// Exit-code scheme: 2 = user-fixable config, 3 = allowlist block, 1 = everything else.
 export const EXIT_CODES = {
   GENERIC: 1, // unexpected / Discord API / network failure
   CONFIG: 2, // user-fixable config (missing token, bad input, malformed config)
