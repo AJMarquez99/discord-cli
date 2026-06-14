@@ -21,13 +21,22 @@ cd ~/Code/Projects/discord-cli && npm install && npm install -g .
 
 ## Credentials
 
-Set `DISCORD_BOT_TOKEN`, or create `~/.config/discord-cli/credentials.json`:
+The quickest path is `discord login`, which prompts for the bot token (hidden input) and writes
+`~/.config/discord-cli/credentials.json` at `chmod 600`:
+
+```sh
+discord login            # paste the token at the hidden prompt
+discord login --force    # overwrite an existing credentials file
+```
+
+Or do it by hand — set `DISCORD_BOT_TOKEN`, or create `~/.config/discord-cli/credentials.json`:
 
 ```json
 { "botToken": "your-bot-token" }
 ```
 
 Override the config path with `DISCORD_CLI_CONFIG`. Token precedence: env var first, then file.
+Run `discord init` first to scaffold the config files and print the full setup steps.
 
 ## Allowlist
 
@@ -215,6 +224,22 @@ discord doctor
 ```
 
 Verify the bot token; report active mode, bot identity (username, ID, credential source), allowlist channel count, and server count.
+
+### `discord init`
+
+```
+discord init
+```
+
+Scaffold `~/.config/discord-cli/` with starter `allowlist.json` (empty — fail-closed) and `config.json`, report whether credentials are present, and print the remaining setup steps. Non-clobbering: existing files are reported as `exists` and left untouched. Never writes secrets — use `discord login` for the token.
+
+### `discord login`
+
+```
+discord login [--force]
+```
+
+Set up the bot token: prompts for it with **hidden input** and writes `credentials.json` at `chmod 600`. The token flows prompt → file only — it is never echoed, returned, logged, or accepted as a flag. Refuses to overwrite an existing credentials file unless `--force` is passed.
 
 ## Exit codes
 
