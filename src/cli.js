@@ -1,5 +1,6 @@
 import { Command } from 'commander';
 import { defaultDeps } from './deps.js';
+import { VERSION } from './version.js';
 import { runPost } from './commands/post.js';
 import { runRead } from './commands/read.js';
 import { runReact } from './commands/react.js';
@@ -8,10 +9,13 @@ import { runAllowList } from './commands/allow.js';
 import { runDoctor } from './commands/doctor.js';
 import { runChannels } from './commands/channels.js';
 import { runAudit } from './commands/audit.js';
+import { runInit } from './commands/init.js';
+import { runLogin } from './commands/login.js';
 import { DiscordError, EXIT_CODES } from './lib/errors.js';
 import {
   printJson, formatPost, formatRead, formatReact, formatThread,
   formatAllowList, formatDoctor, formatChannels, formatAudit,
+  formatInit, formatLogin,
 } from './lib/format.js';
 
 // Read piped stdin (non-TTY) so agents can stream a body: `echo "..." | discord post --channel x`.
@@ -56,7 +60,7 @@ export function buildProgram(deps = defaultDeps) {
   program
     .name('discord')
     .description('Personal Discord CLI for agentic sessions (gh/gmail/gsc sibling)')
-    .version('0.3.0')
+    .version(VERSION)
     .option('--format <format>', 'output format: json|table', 'json')
     .option('--profile <name>', 'config profile (reserved; single identity in v1)');
 
@@ -136,6 +140,17 @@ export function buildProgram(deps = defaultDeps) {
     .command('doctor')
     .description('Verify the bot token; report mode, identity, allowlist + server counts')
     .action(handle(runDoctor, { table: formatDoctor }, deps));
+
+  program
+    .command('init')
+    .description('Scaffold ~/.config/discord-cli/ config files and print setup steps')
+    .action(handle(runInit, { table: formatInit }, deps));
+
+  program
+    .command('login')
+    .description('Set up the Discord bot token — prompts for it (hidden), writes credentials.json (chmod 600)')
+    .option('--force', 'overwrite existing credentials')
+    .action(handle(runLogin, { table: formatLogin }, deps));
 
   return program;
 }

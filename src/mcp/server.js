@@ -3,6 +3,7 @@ import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { defaultDeps } from '../deps.js';
 import { TOOLS } from './tools.js';
 import { DiscordError } from '../lib/errors.js';
+import { VERSION } from '../version.js';
 
 export function makeToolHandler(tool, deps) {
   return async (args) => {
@@ -17,7 +18,7 @@ export function makeToolHandler(tool, deps) {
 }
 
 export function buildMcpServer(deps = defaultDeps) {
-  const server = new McpServer({ name: 'discord-cli', version: '0.3.0' });
+  const server = new McpServer({ name: 'discord-cli', version: VERSION });
   for (const t of TOOLS) {
     server.registerTool(t.name, { description: t.description, inputSchema: t.inputSchema }, makeToolHandler(t, deps));
   }
