@@ -41,8 +41,8 @@ capability governed by Discord's own permissions."** It also **drops channel ali
 **allowlist.json** — channels are now plain channel-ID strings, plus an optional `servers` list:
 ```json
 {
-  "channels": ["1514035571826102413"],
-  "servers": ["1362426046091362305"]
+  "channels": ["123456789012345678"],
+  "servers": ["987654321098765432"]
 }
 ```
 - `channels`: array of channel-ID strings. An **object form** `{ "channelId": "…", "serverId": "…?" }`

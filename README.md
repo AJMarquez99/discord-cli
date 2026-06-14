@@ -44,8 +44,8 @@ Run `discord init` first to scaffold the config files and print the full setup s
 
 ```json
 {
-  "channels": ["1514035571826102413"],
-  "servers": ["1362426046091362305"]
+  "channels": ["123456789012345678"],
+  "servers": ["987654321098765432"]
 }
 ```
 
@@ -123,9 +123,9 @@ The message body can be piped on stdin when `--message` is omitted.
 **Examples:**
 
 ```bash
-discord post --channel 1514035571826102413 --message "Deploy complete."
-echo "Nightly report ready." | discord post --channel 1514035571826102413
-discord post --channel 1514035571826102413 --message "test" --dry-run
+discord post --channel 123456789012345678 --message "Deploy complete."
+echo "Nightly report ready." | discord post --channel 123456789012345678
+discord post --channel 123456789012345678 --message "test" --dry-run
 ```
 
 ### `discord read`
@@ -195,8 +195,8 @@ List a server's channels (name→ID, type, category). Marks allowlisted channels
 **Example:**
 
 ```bash
-discord channels --server 1362426046091362305
-discord channels --server 1362426046091362305 --type text
+discord channels --server 987654321098765432
+discord channels --server 987654321098765432 --type text
 ```
 
 ### `discord allow list`
