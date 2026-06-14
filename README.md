@@ -289,3 +289,13 @@ CLI. The allowlist gate, restricted/open mode, mention-safety, dry-run, and audi
 apply unchanged. A blocked channel returns an MCP error result (the tool call succeeds at
 the protocol level, but `isError: true` is set in the response) — the server never crashes
 on a blocked request.
+
+## Related tools
+
+discord-cli is one of a small family of personal, fail-closed CLIs built for AI coding agents —
+each a focused wrapper around a single service, in the spirit of [`gh`](https://cli.github.com):
+
+- **[gmail-cli](https://github.com/AJMarquez99/gmail-cli)** — send + IMAP read over Gmail, with a
+  fail-closed recipient allowlist and an optional MCP server.
+- **[dot-ai](https://github.com/AJMarquez99/dot-ai)** — the agent-agnostic `.ai/` project-intelligence
+  convention these tools are documented with.

@@ -191,4 +191,4 @@ behavior and is reflected in both the CLI flags and the MCP tool schemas
 
 ## Profile-ready seam
 
-Both `resolveCredentials({ profile })` and `loadAllowlist({ profile })` accept a `profile` argument (forwarded from `--profile`). In v1 it is accepted but unused (`_profile`). This mirrors the `personal-agent` / `daedabyte-agent` pattern in the sibling CLIs and makes adding multi-bot profiles a non-breaking extension.
+Both `resolveCredentials({ profile })` and `loadAllowlist({ profile })` accept a `profile` argument (forwarded from `--profile`). In v1 it is accepted but unused (`_profile`). This mirrors an aws-style per-profile pattern used in the sibling CLIs and makes adding multi-bot profiles a non-breaking extension.
