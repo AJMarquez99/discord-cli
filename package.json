@@ -2,7 +2,7 @@
   "name": "@ajmarquez99/discord-cli",
   "version": "0.3.0",
   "type": "module",
-  "description": "Personal Discord CLI for agentic sessions (gh/gmail/gsc sibling). Post, read, react, and thread via the Discord REST API; fail-closed channel allowlist on sends.",
+  "description": "Discord CLI for coding agents — post, read, react, reply, and manage threads via the Discord REST API, with a fail-closed channel allowlist. Ships an MCP server too.",
   "bin": {
     "discord": "./bin/discord.js",
     "discord-mcp": "./bin/discord-mcp.js"

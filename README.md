@@ -1,15 +1,26 @@
 # discord-cli
 
-A personal Discord CLI for agentic sessions — the `gh`/`gmail`/`gsc` sibling. Post messages,
+[![npm version](https://img.shields.io/npm/v/@ajmarquez99/discord-cli)](https://www.npmjs.com/package/@ajmarquez99/discord-cli)
+[![CI](https://github.com/AJMarquez99/discord-cli/actions/workflows/tests.yml/badge.svg)](https://github.com/AJMarquez99/discord-cli/actions/workflows/tests.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
+A Discord CLI for coding agents — the `gh`/`gmail`/`gsc` sibling. Post messages,
 read channel history, react, reply, and create threads via the Discord REST API. All channel
 content access (reads, reactions, writes) is gated by a fail-closed allowlist.
 
-**Version:** 0.3.0
-
 ## Install
 
+**Global (recommended)**
 ```bash
-cd ~/Code/Projects/discord-cli && npm install && npm install -g .
+npm install -g @ajmarquez99/discord-cli
+discord --version
+```
+This installs both the `discord` CLI and the `discord-mcp` MCP server.
+
+**From source**
+```bash
+git clone https://github.com/AJMarquez99/discord-cli.git
+cd discord-cli && npm install && npm install -g .
 ```
 
 ## Discord setup
@@ -292,7 +303,7 @@ on a blocked request.
 
 ## Related tools
 
-discord-cli is one of a small family of personal, fail-closed CLIs built for AI coding agents —
+discord-cli is one of a small family of fail-closed CLIs built for AI coding agents —
 each a focused wrapper around a single service, in the spirit of [`gh`](https://cli.github.com):
 
 - **[gmail-cli](https://github.com/AJMarquez99/gmail-cli)** — send + IMAP read over Gmail, with a
