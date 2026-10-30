@@ -16,7 +16,7 @@ bin/discord.js
 
 **`bin/discord.js`** — entry point: calls `run(process.argv)`, nothing else.
 
-**`src/cli.js`** — registers the Commander tree (`post`, `read`, `react`, `thread create`, `channels`, `allow list`, `audit`, `doctor`) and the global `--format json|table` / reserved `--profile` options. All actions go through `handle(fn, { table, preprocess }, deps)`, which:
+**`src/cli.js`** — registers the Commander tree (`post`, `read`, `react`, `thread create`, `channels`, `threads`, `allow list`, `audit`, `doctor`) and the global `--format json|table` / reserved `--profile` options. All actions go through `handle(fn, { table, preprocess }, deps)`, which:
 - Runs an optional `preprocess` hook before the command (used by `post` to read piped stdin into `opts.message`).
 - Calls the command function and prints via `printJson` or the `table` formatter.
 - Catches any thrown error: if it is a `DiscordError`, sets `process.exitCode = err.exitCode`; otherwise uses `EXIT_CODES.GENERIC (1)`.
@@ -31,7 +31,7 @@ bin/discord.js
 - `ChannelNotAllowedError` — exit 3 (FORBIDDEN); allowlist block on any content access.
 - `DiscordApiError` — exit 1 (GENERIC); non-OK HTTP response from Discord.
 
-**`src/lib/format.js`** — `printJson` (always available) + per-command `format*` table helpers (`formatPost`, `formatRead`, `formatReact`, `formatThread`, `formatAllowList`, `formatDoctor`, `formatChannels`, `formatAudit`). Selected by `handle()` when `--format table` is active.
+**`src/lib/format.js`** — `printJson` (always available) + per-command `format*` table helpers (`formatPost`, `formatRead`, `formatReact`, `formatThread`, `formatAllowList`, `formatDoctor`, `formatChannels`, `formatThreads`, `formatAudit`). Selected by `handle()` when `--format table` is active.
 
 ## Dependency injection
 
@@ -76,6 +76,7 @@ Used by `post --thread` and `thread create`. Fetches the thread to get its `pare
 
 - **Discovery (`discord channels`):** calls `GET /guilds/{id}/channels`, returns metadata only (name, ID, type, category, `allowlisted` flag). **Ungated** — no allowlist check. Visibility follows Discord's own permissions for the bot.
 - **Content (`post`, `read`, `react`, `thread create`):** gated by `gateChannel`/`gateThreadParent`. Non-allowlisted channel in restricted mode → exit 3.
+- **Thread discovery (`discord threads`) is gated on the parent channel** (`--channel` via `gateChannel`; `--server` filters to threads whose parent passes), because thread/forum-post titles are member-authored untrusted content, unlike admin-set channel names. Dropped threads are counted (`filtered`), never returned.
 
 ## Config (`src/config.js`)
 
@@ -121,7 +122,7 @@ Audit entry shape:
 - `Authorization: Bot <token>` header on every request.
 - 429 rate-limit retry: honors `Retry-After` header (seconds), retries up to `MAX_RETRIES = 2`.
 - Non-OK responses throw `DiscordApiError` with the HTTP status and Discord error body.
-- Methods: `getMe`, `getChannel`, `getGuildChannels`, `getMessages`, `createMessage`, `addReaction`, `startThreadFromMessage`.
+- Methods: `getMe`, `getChannel`, `getGuildChannels`, `getMessages`, `createMessage`, `addReaction`, `startThreadFromMessage`, `getActiveThreads`, `getArchivedThreads`.
 - `fetchImpl` and `sleep` are injectable for tests.
 
 ## Output
@@ -155,7 +156,7 @@ bin/discord-mcp.js
 to stderr, and exits 1.
 
 **`src/mcp/server.js`** — SDK binding using `@modelcontextprotocol/sdk` v1:
-- `buildMcpServer(deps)` — constructs a `McpServer` named `discord-cli` v`0.3.0`, registers
+- `buildMcpServer(deps)` — constructs a `McpServer` named `discord-cli` v`0.4.0`, registers
   every tool from `TOOLS` via `server.registerTool(name, schema, handler)`.
 - `makeToolHandler(tool, deps)` — returns an async handler that calls
   `tool.command(tool.mapArgs(args), deps)` and wraps the result in

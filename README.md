@@ -210,6 +210,29 @@ discord channels --server 987654321098765432
 discord channels --server 987654321098765432 --type text
 ```
 
+### `discord threads`
+
+```
+discord threads --channel <id> | --server <guildId> [--archived] [--limit N] [--query <text>] [--before <iso>]
+```
+
+List active (or, per channel, archived) threads and forum posts: id, name, parent, archived/locked, message count, created/last-message time, forum tags, `allowlisted`. Metadata only — never fetches message content. **Gated on the parent channel**, because thread and forum-post titles are member-authored content: `--channel` must pass the gate (otherwise exit 3); `--server` returns only threads whose parent channel passes, and reports how many were dropped as `filtered` (their titles are never returned).
+
+- `--channel <id>` — list threads under this channel (a text or forum channel)
+- `--server <guildId>` — list active threads across a server (filtered by the gate). With neither flag, defaults to the single entry in `allowlist.servers`.
+- `--archived` — list archived threads instead of active ones; requires `--channel` (Discord lists archived threads per channel)
+- `--limit <N>` — max rows (default `25`, max `100`)
+- `--query <text>` — case-insensitive substring match on thread name. Filtering is client-side after Discord returns a page, so a page (especially with `--archived`) may hold fewer than `--limit` rows while `hasMore` still reflects Discord's pagination.
+- `--before <iso>` — archived-listing cursor (ISO timestamp); pass the last row's archive position to page back
+- `--unrestricted` — open mode: any visible channel in an allowlisted server
+
+**Example (forum flow):**
+
+```bash
+discord threads --channel 123456789012345678 --query linear
+discord read --thread 987654321098765432
+```
+
 ### `discord allow list`
 
 ```
@@ -289,6 +312,7 @@ as the CLI. No extra setup needed.
 | `discord_react` | Add a reaction to a message in an allowlisted channel or thread. |
 | `discord_create_thread` | Create a thread from a message in an allowlisted channel. |
 | `discord_channels` | List a server's channels (names → ids, type; marks allowlisted). Metadata only. |
+| `discord_threads` | List active/archived threads and forum posts (metadata only; gated on the parent channel). |
 | `discord_audit` | Show recent audited actions (newest first). |
 | `discord_doctor` | Verify the bot token; report mode, identity, allowlist + server counts. |
 | `discord_allowlist` | Show the allowlisted channel ids and server ids. |
