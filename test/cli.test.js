@@ -103,6 +103,50 @@ describe('cli run()', () => {
     expect(process.exitCode).toBe(0);
   });
 
+  it('threads --channel passes options through and prints JSON', async () => {
+    const getActiveThreads = vi.fn().mockResolvedValue({ threads: [
+      { id: '501', name: 'Bug thing', parent_id: '111111111111111111', thread_metadata: {}, applied_tags: [] },
+      { id: '502', name: 'other', parent_id: '111111111111111111', thread_metadata: {}, applied_tags: [] },
+    ] });
+    await run(
+      argv('threads', '--channel', '111111111111111111', '--query', 'bug', '--limit', '5'),
+      fakeDeps({ createClient: () => ({
+        getChannel: async () => ({ id: '111111111111111111', guild_id: '77' }),
+        getActiveThreads,
+      }) }),
+    );
+    expect(getActiveThreads).toHaveBeenCalledWith('77');
+    const json = JSON.parse(out.mock.calls.map((c) => c[0]).join(''));
+    expect(json.count).toBe(1);
+    expect(json.threads[0].id).toBe('501');
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('threads --archived --before passes them to getArchivedThreads; --format table prints', async () => {
+    const getArchivedThreads = vi.fn().mockResolvedValue({ threads: [
+      { id: '503', name: 'Old post', parent_id: '111111111111111111', thread_metadata: { archived: true }, applied_tags: [] },
+    ], has_more: true });
+    await run(
+      argv('--format', 'table', 'threads', '--channel', '111111111111111111', '--archived', '--before', '2026-01-01T00:00:00.000Z'),
+      fakeDeps({ createClient: () => ({
+        getChannel: async () => ({ id: '111111111111111111', guild_id: '77' }),
+        getArchivedThreads,
+      }) }),
+    );
+    expect(getArchivedThreads).toHaveBeenCalledWith('111111111111111111', { before: '2026-01-01T00:00:00.000Z', limit: 25 });
+    const printed = out.mock.calls.map((c) => c[0]).join('');
+    expect(printed).toContain('Old post');
+    expect(printed).toContain('archived');
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('threads --server uses the server listing', async () => {
+    const getActiveThreads = vi.fn().mockResolvedValue({ threads: [] });
+    await run(argv('threads', '--server', '77', '--unrestricted'), fakeDeps({ createClient: () => ({ getActiveThreads }) }));
+    expect(getActiveThreads).toHaveBeenCalledWith('77');
+    expect(process.exitCode).toBe(0);
+  });
+
   it('audit calls readAudit and prints empty entries as JSON', async () => {
     const readAudit = vi.fn().mockReturnValue({ entries: [] });
     await run(argv('audit'), fakeDeps({ readAudit }));
