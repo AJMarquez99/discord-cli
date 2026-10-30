@@ -20,6 +20,7 @@ function toRow(t, tagNames, allowlist) {
     messageCount: t.message_count ?? null,
     createdAt: meta.create_timestamp || snowflakeToIso(t.id),
     lastMessageAt: snowflakeToIso(t.last_message_id),
+    archivedAt: meta.archive_timestamp ?? null,
     tags: (t.applied_tags || []).map((id) => tagNames.get(String(id)) ?? String(id)),
     allowlisted: isAllowedChannel(allowlist, t.parent_id),
   };

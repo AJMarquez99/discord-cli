@@ -108,8 +108,8 @@ A change that violates one is a security regression, not a feature.
 
 - **BND-1 (MUST)** Every content op (post/read/react/thread) passes through the **fail-closed gate**
   (`gateChannel` / `gateThreadParent`) before any write. A blocked channel throws and exits **3**.
-  Channel *discovery* (`discord channels`) is metadata-only and ungated; thread discovery (`discord threads`) is gated on the parent channel because
-  thread titles are member-authored content.
+  Channel *discovery* (`discord channels`) is metadata-only and ungated; thread discovery (`discord threads`) is gated on the parent
+  channel because thread titles are member-authored content.
 - **BND-2 (MUST)** The allowlist bounds **channels** (and, in open mode, servers) and is the
   load-bearing defense against injection-driven exfiltration (T1): even a fully-compromised agent can
   only reach pre-approved channels.

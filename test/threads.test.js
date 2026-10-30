@@ -64,11 +64,20 @@ describe('runThreads --channel', () => {
     const t2 = thread('3', CH);
     const { deps } = make({ getActiveThreads: vi.fn().mockResolvedValue({ threads: [t, t2] }) });
     const r = await runThreads({ channel: CH }, deps);
-    expect(Object.keys(r.threads[0])).toEqual(['id', 'name', 'parentId', 'archived', 'locked', 'messageCount', 'createdAt', 'lastMessageAt', 'tags', 'allowlisted']);
+    expect(Object.keys(r.threads[0])).toEqual(['id', 'name', 'parentId', 'archived', 'locked', 'messageCount', 'createdAt', 'lastMessageAt', 'archivedAt', 'tags', 'allowlisted']);
     expect(r.threads[0]).toMatchObject({ archived: true, locked: true, lastMessageAt: null, allowlisted: true, tags: [] });
     expect(r.threads[0].createdAt).toMatch(/^20\d\d-/);
     expect(r.threads[1].createdAt).toBe('2026-01-01T00:00:00.000Z');
     expect(r.threads[1].lastMessageAt).toMatch(/^20\d\d-/);
+  });
+
+  it('maps archivedAt from thread_metadata.archive_timestamp, null when absent', async () => {
+    const a = thread('4', CH, { thread_metadata: { archived: true, archive_timestamp: '2026-02-03T04:05:06.000Z' } });
+    const b = thread('5', CH, { thread_metadata: { archived: true } });
+    const { deps } = make({ getActiveThreads: vi.fn().mockResolvedValue({ threads: [a, b] }) });
+    const r = await runThreads({ channel: CH }, deps);
+    expect(r.threads[0].archivedAt).toBe('2026-02-03T04:05:06.000Z');
+    expect(r.threads[1].archivedAt).toBeNull();
   });
 
   it('archived forwards before+limit and reports hasMore', async () => {
