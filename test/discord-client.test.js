@@ -77,6 +77,42 @@ describe('createDiscordClient', () => {
     expect(init.headers.Authorization).toBe('Bot tok');
   });
 
+  it('getActiveThreads GETs the guild active threads endpoint', async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(fakeRes({ json: { threads: [] } }));
+    const client = createDiscordClient(creds, { fetchImpl });
+    await client.getActiveThreads('77');
+    const [url, init] = fetchImpl.mock.calls[0];
+    expect(url).toBe('https://discord.com/api/v10/guilds/77/threads/active');
+    expect(init.method).toBe('GET');
+  });
+
+  it('getArchivedThreads GETs the public archived endpoint with before/limit in the query', async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(fakeRes({ json: { threads: [] } }));
+    const client = createDiscordClient(creds, { fetchImpl });
+    await client.getArchivedThreads('123', { before: '2026-01-01T00:00:00.000Z', limit: 25 });
+    const [url, init] = fetchImpl.mock.calls[0];
+    expect(init.method).toBe('GET');
+    expect(url).toBe(
+      'https://discord.com/api/v10/channels/123/threads/archived/public?before=2026-01-01T00%3A00%3A00.000Z&limit=25',
+    );
+  });
+
+  it('getArchivedThreads drops null/undefined before and limit', async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(fakeRes({ json: { threads: [] } }));
+    const client = createDiscordClient(creds, { fetchImpl });
+    await client.getArchivedThreads('123', { before: null, limit: undefined });
+    const [url] = fetchImpl.mock.calls[0];
+    expect(url).toBe('https://discord.com/api/v10/channels/123/threads/archived/public');
+  });
+
+  it('getArchivedThreads with no options adds no query string', async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(fakeRes({ json: { threads: [] } }));
+    const client = createDiscordClient(creds, { fetchImpl });
+    await client.getArchivedThreads('123');
+    const [url] = fetchImpl.mock.calls[0];
+    expect(url).toBe('https://discord.com/api/v10/channels/123/threads/archived/public');
+  });
+
   it('throws DiscordApiError on a non-OK response', async () => {
     const fetchImpl = vi.fn().mockResolvedValue(fakeRes({ status: 403, json: { message: 'Missing Permissions', code: 50013 } }));
     const client = createDiscordClient(creds, { fetchImpl });
