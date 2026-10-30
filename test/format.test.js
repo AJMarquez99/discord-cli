@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { formatPost, formatRead, formatReact, formatThread, formatAllowList, formatDoctor, formatChannels, formatAudit } from '../src/lib/format.js';
+import { formatPost, formatRead, formatReact, formatThread, formatAllowList, formatDoctor, formatChannels, formatAudit, formatThreads } from '../src/lib/format.js';
 
 describe('table formatters', () => {
   it('formatPost shows channel and message id', () => {
@@ -82,6 +82,45 @@ describe('table formatters', () => {
 
   it('formatChannels returns a "no channels" note when empty', () => {
     expect(formatChannels({ serverId: '77', count: 0, channels: [] })).toContain('no channels');
+  });
+
+  describe('formatThreads', () => {
+    const row = (over = {}) => ({
+      id: '501', name: 'bug report', parentId: '10', archived: false, locked: false,
+      messageCount: 4, createdAt: '2026-01-01T00:00:00.000Z', lastMessageAt: '2026-01-02T00:00:00.000Z',
+      tags: ['open', 'bug'], allowlisted: true, ...over,
+    });
+    it('renders a header and one row per thread', () => {
+      const out = formatThreads({
+        channelId: '10', serverId: '77', archived: false, count: 2, filtered: 0, hasMore: false,
+        threads: [row(), row({ id: '502', name: 'old', archived: true, tags: [], messageCount: null })],
+      });
+      const lines = out.split('\n');
+      expect(lines[0]).toContain('2 thread');
+      expect(lines[0]).not.toContain('filtered');
+      expect(lines[0]).not.toContain('more');
+      expect(lines[1]).toContain('501');
+      expect(lines[1]).toContain('bug report');
+      expect(lines[1]).toContain('10');
+      expect(lines[1]).toContain('active');
+      expect(lines[1]).toContain('4');
+      expect(lines[1]).toContain('2026-01-02T00:00:00.000Z');
+      expect(lines[1]).toContain('open, bug');
+      expect(lines[2]).toContain('archived');
+    });
+    it('shows locked state', () => {
+      const out = formatThreads({ serverId: '77', count: 1, filtered: 0, hasMore: false, threads: [row({ locked: true })] });
+      expect(out).toContain('locked');
+    });
+    it('includes filtered and hasMore in the header when set', () => {
+      const out = formatThreads({ serverId: '77', count: 1, filtered: 3, hasMore: true, threads: [row()] });
+      const header = out.split('\n')[0];
+      expect(header).toContain('3 filtered');
+      expect(header).toContain('more available');
+    });
+    it('returns a "no threads" note when empty', () => {
+      expect(formatThreads({ serverId: '77', count: 0, filtered: 0, hasMore: false, threads: [] })).toContain('no threads');
+    });
   });
 
   describe('formatAudit', () => {

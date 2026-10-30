@@ -67,6 +67,22 @@ export function formatChannels(r) {
     .join('\n');
 }
 
+export function formatThreads(r) {
+  if (!r.threads.length) {
+    const extra = r.filtered > 0 ? ` (${r.filtered} filtered)` : '';
+    return `(no threads found in server ${r.serverId}${extra})`;
+  }
+  const header = [`${r.count} thread(s)`];
+  if (r.filtered > 0) header.push(`${r.filtered} filtered`);
+  if (r.hasMore) header.push('more available');
+  const rows = r.threads.map((t) => {
+    const state = t.archived ? 'archived' : t.locked ? 'locked' : 'active';
+    const msgs = t.messageCount ?? '-';
+    return `${t.id}  ${t.name}  parent ${t.parentId}  ${state}  ${msgs} msg  ${t.lastMessageAt ?? '-'}  ${t.tags.join(', ')}`.trimEnd();
+  });
+  return [header.join(' · '), ...rows].join('\n');
+}
+
 export function formatAudit(r) {
   if (!r.entries.length) return '(no audited actions yet)';
   return r.entries

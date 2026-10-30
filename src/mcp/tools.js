@@ -4,6 +4,7 @@ import { runRead } from '../commands/read.js';
 import { runReact } from '../commands/react.js';
 import { runThreadCreate } from '../commands/thread.js';
 import { runChannels } from '../commands/channels.js';
+import { runThreads } from '../commands/threads.js';
 import { runAudit } from '../commands/audit.js';
 import { runDoctor } from '../commands/doctor.js';
 import { runAllowList } from '../commands/allow.js';
@@ -49,6 +50,16 @@ export const TOOLS = [
     inputSchema: { server: z.string().optional(), type: z.string().optional() },
     command: runChannels,
     mapArgs: (a) => ({ server: a.server, type: a.type }),
+  },
+  {
+    name: 'discord_threads',
+    description: 'List threads / forum posts under an allowlisted channel (or across a server, filtered to allowed parents). Metadata only — use discord_read with thread to read a post.',
+    inputSchema: {
+      channel: z.string().optional(), server: z.string().optional(), archived: z.boolean().optional(),
+      limit: z.number().optional(), query: z.string().optional(), before: z.string().optional(),
+    },
+    command: runThreads,
+    mapArgs: (a) => ({ channel: a.channel, server: a.server, archived: a.archived, limit: a.limit, query: a.query, before: a.before }),
   },
   {
     name: 'discord_audit',

@@ -53,8 +53,9 @@ genuinely unexpected failures.
 ## The content gate is fail-closed — keep it that way
 
 - All **content** access (`post`, `read`, `react`, `thread create`, and the `--thread` variants) goes
-  through `gateChannel` / `gateThreadParent` in `src/allowlist.js`. **Discovery** (`channels`) is the
-  only ungated path and returns metadata only.
+  through `gateChannel` / `gateThreadParent` in `src/allowlist.js`. `threads` goes through the
+  gate (`--channel`) or the same rules as a filter (`--server`). **Discovery** (`channels`) remains
+  the only ungated path and returns metadata only.
 - A **missing** allowlist file means "deny everything," not "allow all." In **restricted** mode only
   IDs in `allowlist.channels` pass. In **open** mode, channels in an allowlisted **server** also pass —
   but with **zero servers listed, open grants nothing new**.
