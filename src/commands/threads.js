@@ -20,7 +20,7 @@ function toRow(t, tagNames, allowlist) {
     messageCount: t.message_count ?? null,
     createdAt: meta.create_timestamp || snowflakeToIso(t.id),
     lastMessageAt: snowflakeToIso(t.last_message_id),
-    archivedAt: meta.archive_timestamp ?? null,
+    archivedAt: meta.archived ? (meta.archive_timestamp ?? null) : null,
     tags: (t.applied_tags || []).map((id) => tagNames.get(String(id)) ?? String(id)),
     allowlisted: isAllowedChannel(allowlist, t.parent_id),
   };
@@ -36,6 +36,7 @@ const tagMap = (channel) =>
 export async function runThreads(opts, deps) {
   if (opts.channel && opts.server) throw new InvalidInputError('Provide either --channel or --server, not both.');
   if (opts.archived && !opts.channel) throw new InvalidInputError('--archived requires --channel <id> (Discord lists archived threads per channel).');
+  if (opts.before && !opts.archived) throw new InvalidInputError('--before requires --archived (it pages archived threads).');
   const mode = resolveMode({ config: deps.loadConfig(), env: process.env, unrestricted: opts.unrestricted });
   const allowlist = deps.loadAllowlist();
   let serverId = opts.server;

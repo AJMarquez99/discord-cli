@@ -80,6 +80,20 @@ describe('runThreads --channel', () => {
     expect(r.threads[1].archivedAt).toBeNull();
   });
 
+  it('archivedAt is null for an active thread even when archive_timestamp is set', async () => {
+    const t = thread('6', CH, { thread_metadata: { archived: false, archive_timestamp: '2026-02-03T04:05:06.000Z' } });
+    const { deps } = make({ getActiveThreads: vi.fn().mockResolvedValue({ threads: [t] }) });
+    const r = await runThreads({ channel: CH }, deps);
+    expect(r.threads[0].archivedAt).toBeNull();
+  });
+
+  it('open mode: channel and its guild both off the allowlist is rejected before listing', async () => {
+    const { deps, client } = make({ config: OPEN, allowlist: { channels: [], servers: [OTHER] } });
+    await expect(runThreads({ channel: CH }, deps)).rejects.toBeInstanceOf(ChannelNotAllowedError);
+    expect(client.getActiveThreads).not.toHaveBeenCalled();
+    expect(client.getArchivedThreads).not.toHaveBeenCalled();
+  });
+
   it('archived forwards before+limit and reports hasMore', async () => {
     const getArchivedThreads = vi.fn().mockResolvedValue({ threads: [thread('1', CH)], has_more: true });
     const { deps } = make({ getArchivedThreads });
@@ -175,6 +189,10 @@ describe('runThreads input errors', () => {
   it('archived without channel errors', async () => {
     const { deps } = make();
     await expect(runThreads({ server: GUILD, archived: true }, deps)).rejects.toBeInstanceOf(InvalidInputError);
+  });
+  it('before without archived errors', async () => {
+    const { deps } = make();
+    await expect(runThreads({ channel: CH, before: '2026-01-01T00:00:00Z' }, deps)).rejects.toThrow(/--before requires --archived/);
   });
   it('single allowlisted server is the default', async () => {
     const getActiveThreads = vi.fn().mockResolvedValue({ threads: [] });

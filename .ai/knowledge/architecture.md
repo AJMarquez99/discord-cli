@@ -156,7 +156,8 @@ bin/discord-mcp.js
 to stderr, and exits 1.
 
 **`src/mcp/server.js`** — SDK binding using `@modelcontextprotocol/sdk` v1:
-- `buildMcpServer(deps)` — constructs a `McpServer` named `discord-cli` v`0.4.0`, registers
+- `buildMcpServer(deps)` — constructs a `McpServer` named `discord-cli` whose version comes from `VERSION` (read from package.json, so it
+  can't drift), registers
   every tool from `TOOLS` via `server.registerTool(name, schema, handler)`.
 - `makeToolHandler(tool, deps)` — returns an async handler that calls
   `tool.command(tool.mapArgs(args), deps)` and wraps the result in
