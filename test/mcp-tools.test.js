@@ -5,6 +5,7 @@ import { runRead } from '../src/commands/read.js';
 import { runReact } from '../src/commands/react.js';
 import { runThreadCreate } from '../src/commands/thread.js';
 import { runChannels } from '../src/commands/channels.js';
+import { runThreads } from '../src/commands/threads.js';
 import { runAudit } from '../src/commands/audit.js';
 import { runDoctor } from '../src/commands/doctor.js';
 import { runAllowList } from '../src/commands/allow.js';
@@ -15,13 +16,14 @@ const EXPECTED_NAMES = [
   'discord_react',
   'discord_create_thread',
   'discord_channels',
+  'discord_threads',
   'discord_audit',
   'discord_doctor',
   'discord_allowlist',
 ];
 
 describe('TOOLS table', () => {
-  it('has the 8 expected tool names in order', () => {
+  it('has the 9 expected tool names in order', () => {
     expect(TOOLS.map((t) => t.name)).toEqual(EXPECTED_NAMES);
   });
 
@@ -48,6 +50,12 @@ describe('TOOLS table', () => {
   it('discord_channels command is runChannels', () => {
     const t = TOOLS.find((t) => t.name === 'discord_channels');
     expect(t.command).toBe(runChannels);
+  });
+
+  it('discord_threads command is runThreads and has no unrestricted arg', () => {
+    const t = TOOLS.find((t) => t.name === 'discord_threads');
+    expect(t.command).toBe(runThreads);
+    expect('unrestricted' in t.inputSchema).toBe(false);
   });
 
   it('discord_audit command is runAudit', () => {
@@ -103,6 +111,12 @@ describe('TOOLS table', () => {
     it('discord_channels passes server and type through', () => {
       const t = TOOLS.find((t) => t.name === 'discord_channels');
       expect(t.mapArgs({ server: 's', type: 'text' })).toEqual({ server: 's', type: 'text' });
+    });
+
+    it('discord_threads maps args and drops unrestricted', () => {
+      const t = TOOLS.find((t) => t.name === 'discord_threads');
+      expect(t.mapArgs({ channel: 'c', server: 's', archived: true, limit: 5, query: 'q', before: 'b', unrestricted: true }))
+        .toEqual({ channel: 'c', server: 's', archived: true, limit: 5, query: 'q', before: 'b' });
     });
 
     it('discord_audit passes limit through', () => {

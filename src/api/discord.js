@@ -47,6 +47,10 @@ export function createDiscordClient(creds, { fetchImpl = fetch, sleep = (ms) => 
     getMe: () => request('GET', '/users/@me'),
     getChannel: (channelId) => request('GET', `/channels/${channelId}`),
     getGuildChannels: (guildId) => request('GET', `/guilds/${guildId}/channels`),
+    getActiveThreads: (guildId) => request('GET', `/guilds/${guildId}/threads/active`),
+    // `before` is an ISO8601 archive_timestamp cursor, passed through as-is.
+    getArchivedThreads: (channelId, { before, limit } = {}) =>
+      request('GET', `/channels/${channelId}/threads/archived/public`, { query: { before, limit } }),
     getMessages: (channelId, { limit, before, after } = {}) =>
       request('GET', `/channels/${channelId}/messages`, { query: { limit, before, after } }),
     createMessage: (channelId, payload) =>

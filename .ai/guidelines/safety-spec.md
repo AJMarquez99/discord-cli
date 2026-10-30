@@ -108,7 +108,9 @@ A change that violates one is a security regression, not a feature.
 
 - **BND-1 (MUST)** Every content op (post/read/react/thread) passes through the **fail-closed gate**
   (`gateChannel` / `gateThreadParent`) before any write. A blocked channel throws and exits **3**.
-  Channel *discovery* (`discord channels`) is metadata-only and ungated.
+  Channel *discovery* (`discord channels`) is metadata-only and ungated; thread discovery
+  (`discord threads`) is gated on the parent channel because thread titles are member-authored
+  content.
 - **BND-2 (MUST)** The allowlist bounds **channels** (and, in open mode, servers) and is the
   load-bearing defense against injection-driven exfiltration (T1): even a fully-compromised agent can
   only reach pre-approved channels.
@@ -188,7 +190,7 @@ A change that violates one is a security regression, not a feature.
 - **MCP-4 (MUST)** Surface a gate block as a structured, non-crashing error (MCP `isError: true`) so
   the orchestrator sees the denial — never a server crash, never a silent pass.
 - **MCP-5 (SHOULD)** The exposed surface is the **operational verbs only** (post, read, react, thread,
-  channels, `allow list`, audit-read, doctor). Setup/admin verbs stay CLI-only.
+  threads, channels, `allow list`, audit-read, doctor). Setup/admin verbs stay CLI-only.
 - **MCP-6 (MUST)** Content safety still applies: **mention-safety on** (`@everyone`/`@here`/role pings
   suppressed unless explicitly permitted), body-logging off by default.
 

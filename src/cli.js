@@ -8,13 +8,14 @@ import { runThreadCreate } from './commands/thread.js';
 import { runAllowList } from './commands/allow.js';
 import { runDoctor } from './commands/doctor.js';
 import { runChannels } from './commands/channels.js';
+import { runThreads } from './commands/threads.js';
 import { runAudit } from './commands/audit.js';
 import { runInit } from './commands/init.js';
 import { runLogin } from './commands/login.js';
 import { DiscordError, EXIT_CODES } from './lib/errors.js';
 import {
   printJson, formatPost, formatRead, formatReact, formatThread,
-  formatAllowList, formatDoctor, formatChannels, formatAudit,
+  formatAllowList, formatDoctor, formatChannels, formatThreads, formatAudit,
   formatInit, formatLogin,
 } from './lib/format.js';
 
@@ -121,6 +122,18 @@ export function buildProgram(deps = defaultDeps) {
     .option('--server <guildId>', 'guild/server id (defaults to the single allowlisted server)')
     .option('--type <type>', 'filter by type: text|voice|category|announcement|stage|forum')
     .action(handle(runChannels, { table: formatChannels }, deps));
+
+  program
+    .command('threads')
+    .description('List threads/forum posts under an allowed channel or server (metadata only)')
+    .option('--channel <id>', 'parent channel (or forum) id')
+    .option('--server <guildId>', 'guild/server id (defaults to the single allowlisted server)')
+    .option('--archived', 'list archived threads (requires --channel)')
+    .option('--limit <n>', 'max threads to return (default 25, max 100)')
+    .option('--query <text>', 'filter by thread name (case-insensitive substring)')
+    .option('--before <iso>', 'archived listing: only threads archived before this ISO timestamp')
+    .option('--unrestricted', 'open mode: any visible channel in an allowlisted server')
+    .action(handle(runThreads, { table: formatThreads }, deps));
 
   const allow = program
     .command('allow')

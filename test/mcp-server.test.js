@@ -9,12 +9,12 @@ describe('buildMcpServer', () => {
     expect(server).toBeTruthy();
   });
 
-  it('registers 8 tools', () => {
+  it('registers 9 tools', () => {
     const server = buildMcpServer({});
     // McpServer exposes registered tools via the internal _registeredTools plain object
     const registeredTools = server._registeredTools;
     if (registeredTools && typeof registeredTools === 'object') {
-      expect(Object.keys(registeredTools)).toHaveLength(8);
+      expect(Object.keys(registeredTools)).toHaveLength(9);
     } else {
       // Fallback: just verify the server is a truthy object (no-throw is the assertion)
       expect(server).toBeTruthy();
